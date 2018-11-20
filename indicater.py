@@ -10,8 +10,37 @@ inttype: type of integration, can be internal, interface or boundary
 from nutils import *
 
 
+class functionbased:
 
-class define:
+    def __init__(self, domain, geom, basis, degree):
+        self.domain = domain
+        self.geom   = geom
+        self.degree = degree
+        self.basis  = basis
+        self.type   = 'functionbased'
+
+        self.indicators = {} 
+
+        for i in range(len(basis)):
+            self.indicators[i] = 0
+
+    def add(self, targetdomain, basis, val):
+
+        # calculate residual evaluated over each basisfunction
+        for i in range(len(basis)):
+            res  = targetdomain.integrate(basis[i]*val*function.J(self.geom), degree=self.degree)
+            self.indicators[i] += res
+
+        return self
+
+    def abs(self):
+
+        for key in self.indicators.keys():
+            self.indicators[key] = abs(self.indicators[key])
+
+        return self
+    
+class elementbased:
 
     def __init__(self, domain, geom, degree):
         self.domain = domain
@@ -19,6 +48,7 @@ class define:
         self.degree = degree
         self.indicators = {} 
         self.elemsizes  = {}
+        self.type   = 'elementbased'
 
         # get element sizes
         sizes = self.domain.integrate_elementwise(function.J(self.geom), degree=self.degree)
@@ -36,7 +66,7 @@ class define:
     def residualbased(self, targetdomain, val, inttype):
     
         # calculate the residual contribution per element
-        res   = targetdomain.integrate_elementwise(val, degree=self.degree)
+        res   = targetdomain.integrate_elementwise(val*function.J(self.geom), degree=self.degree)
         
         # assert variable lengths
         assert len(res) == len(targetdomain), 'Length of residual and target domain are not equal'
@@ -62,7 +92,7 @@ class define:
     def goaloriented(self, targetdomain, val, inttype):
     
         # calculate the residual contribution per element
-        res   = targetdomain.integrate_elementwise(val, degree=self.degree)
+        res   = targetdomain.integrate_elementwise(val*function.J(self.geom), degree=self.degree)
         
         # assert variable lengths
         assert len(res) == len(targetdomain), 'Length of residual and target domain are not equal'
@@ -75,5 +105,13 @@ class define:
             if inttype == 'interface':
                 head, tail = transform.lookup_item(elem.opposite[:-1], self.domain.edict )
                 self.indicators[head] += ires
+
+        return self
+
     
+    def abs(self):
+
+        for key in self.indicators.keys():
+            self.indicators[key] = abs(self.indicators[key])
+
         return self

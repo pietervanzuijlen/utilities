@@ -27,6 +27,9 @@ def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle
     for key, val in indicators.items():
         if vmax <= max(val.values()):
             vmax = max(val.values())
+        # Addition for non-absolute indicaters
+        if vmin >= min(val.values()):
+            vmin = min(val.values())
         colors[key] = np.array([]) 
         for i in range(len(domain)):
             colors[key] = np.append(colors[key],np.ones(npoints**2)*val[i])
