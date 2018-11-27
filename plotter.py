@@ -71,7 +71,8 @@ def plot_mesh(name, domain, geom, npoints=5, color=0.5, cmap='jet', title=''):
 
     # background color is found as the color value between 0 and 1 projected on the colormap
     with export.mplfigure(name+'.png') as fig:
-        ax = fig.add_subplot(111, aspect='equal')
+        fig.set_size_inches(6,6)
+        ax = fig.add_axes([0,0,1,1], aspect='equal')
         im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, fill, shading='gouraud', cmap=cmap, vmin=vmin, vmax=vmax)
         ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.5))
         ax.set_title(title)
