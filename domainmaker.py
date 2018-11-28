@@ -108,3 +108,41 @@ def porous(*args, uref=0, rm=.2, rc=.2, M0=.5, M1=.5, **kwargs):
           )
 
     return domain, geom
+
+def channels(uref=0, W=1, H=1, h1=0.2, h2=0.5, w1=0.2, w2=0.2):
+
+    # define patches by verts           # | patchnumber
+    patches = [[0,4,1,5],               # | 0 
+               [1,5,2,6],               # | 1
+               [2,6,3,7],               # | 2
+               [4,8,5,9],               # | 3
+               [6,10,7,11],             # | 4
+               [8,12,9,13],             # | 5
+               [9,13,10,14],            # | 6
+               [10,14,11,15]]           # | 7
+
+    # define vert positions             # | vertnumber
+    verts   = [[0,0],                   # | 0
+               [w1,0],                  # | 1
+               [W-w2,0],                # | 2
+               [W,0],                   # | 3
+               [0,h1],                  # | 4
+               [w1,h1],                 # | 5
+               [W-w2,h1],               # | 6
+               [W,h1],                  # | 7
+               [0,H-h2],                # | 8
+               [w1,H-h2],               # | 9
+               [W-w2,H-h2],             # | 10
+               [W,H-h2],                # | 11
+               [0,H],                   # | 12
+               [w1,H],                  # | 13
+               [W-w2,H],                # | 14
+               [W,H]]                   # | 15
+
+    # make domain
+    domain, geom = mesh.multipatch(patches = patches, patchverts=verts, nelems = {None: 1})
+
+    # apply uniform refinement
+    domain = domain.refine(uref)
+
+    return domain, geom
