@@ -109,7 +109,7 @@ def porous(*args, uref=0, rm=.2, rc=.2, M0=.5, M1=.5, **kwargs):
 
     return domain, geom
 
-def channels(uref=0, W=1, H=1, h1=0.2, h2=0.5, w1=0.2, w2=0.2):
+def channels(uref=0, W=2, H=1, h1=0.2, h2=0.4, w1=0.2, w2=0.2):
 
     # define patches by verts           # | patchnumber
     patches = [[0,4,1,5],               # | 0 
@@ -139,10 +139,34 @@ def channels(uref=0, W=1, H=1, h1=0.2, h2=0.5, w1=0.2, w2=0.2):
                [W-w2,H],                # | 14
                [W,H]]                   # | 15
 
+    nelems  = {None:    1, 
+               (1,2):   8, 
+               (5,6):   8,
+               (9,10):  8,
+               (13,14): 8,
+               (4,8):   2,
+               (5,9):   2,
+               (6,10):  2,
+               (7,11):  2,
+               (8,12):  2,
+               (9,13):  2,
+               (10,14): 2,
+               (11,15): 2}
+
     # make domain
-    domain, geom = mesh.multipatch(patches = patches, patchverts=verts, nelems = {None: 1})
+    domain, geom = mesh.multipatch(patches = patches, patchverts=verts, nelems=nelems)
 
     # apply uniform refinement
     domain = domain.refine(uref)
+
+    # assign boundaries
+    domain = domain.withboundary(
+          left    = 'patch0-left,patch3-left,patch5-left',
+          right   = 'patch2-right,patch4-right,patch7-right',
+          top     = 'patch5-top,patch6-top,patch7-top',
+          bottom  = 'patch0-bottom,patch1-bottom,patch2-bottom',
+          center  = 'patch1-top,patch3-right,patch4-left,patch6-bottom',
+          )
+
 
     return domain, geom
