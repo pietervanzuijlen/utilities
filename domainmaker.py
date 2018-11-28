@@ -109,7 +109,12 @@ def porous(*args, uref=0, rm=.2, rc=.2, M0=.5, M1=.5, **kwargs):
 
     return domain, geom
 
-def channels(uref=0, W=2, H=1, h1=0.2, h2=0.4, w1=0.2, w2=0.2):
+def channels(uref=0, W=2, H=1, h1=0.2, h2=0.4, w1=0.2, w2=0.2, elemsize=0.1):
+
+    assert h1/elemsize == round(h1/elemsize), 'mimimal step size for length is elemsize'
+    assert h2/elemsize == round(h2/elemsize), 'mimimal step size for length is elemsize'
+    assert w1/elemsize == round(w1/elemsize), 'mimimal step size for length is elemsize'
+    assert w2/elemsize == round(w2/elemsize), 'mimimal step size for length is elemsize'
 
     # define patches by verts           # | patchnumber
     patches = [[0,4,1,5],               # | 0 
@@ -139,19 +144,30 @@ def channels(uref=0, W=2, H=1, h1=0.2, h2=0.4, w1=0.2, w2=0.2):
                [W-w2,H],                # | 14
                [W,H]]                   # | 15
 
-    nelems  = {None:    1, 
-               (1,2):   8, 
-               (5,6):   8,
-               (9,10):  8,
-               (13,14): 8,
-               (4,8):   2,
-               (5,9):   2,
-               (6,10):  2,
-               (7,11):  2,
-               (8,12):  2,
-               (9,13):  2,
-               (10,14): 2,
-               (11,15): 2}
+    nelems  = {(0,1):       int((w1)/elemsize),
+               (1,2):       int((W-w1-w2)/elemsize),
+               (2,3):       int((w2)/elemsize),
+               (4,5):       int((w1)/elemsize),
+               (5,6):       int((W-w1-w2)/elemsize),
+               (6,7):       int((w2)/elemsize),
+               (8,9):       int((w1)/elemsize),
+               (9,10):      int((W-w1-w2)/elemsize),
+               (10,11):     int((w2)/elemsize),
+               (12,13):     int((w1)/elemsize),
+               (13,14):     int((W-w1-w2)/elemsize),
+               (14,15):     int((w2)/elemsize),
+               (0,4):       int((h1)/elemsize),
+               (4,8):       int((H-h1-h2)/elemsize),
+               (8,12):      int((h2)/elemsize),
+               (1,5):       int((h1)/elemsize),
+               (5,9):       int((H-h1-h2)/elemsize),
+               (9,13):      int((h2)/elemsize),
+               (2,6):       int((h1)/elemsize),
+               (6,10):      int((H-h1-h2)/elemsize),
+               (10,14):     int((h2)/elemsize),
+               (3,7):       int((h1)/elemsize),
+               (7,11):      int((H-h1-h2)/elemsize),
+               (11,15):     int((h2)/elemsize)}
 
     # make domain
     domain, geom = mesh.multipatch(patches = patches, patchverts=verts, nelems=nelems)
