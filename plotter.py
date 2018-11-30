@@ -131,3 +131,53 @@ def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='jet', title='
   
     return
 
+
+def plot_convergence(name, xval, yval, labels=None, title='', levels={}, triangle=None):
+
+    print(' Levels function should be improved!') 
+    print(' Triangle functionallity not implemented yet)') 
+
+    assert yval.keys() == xval.keys(), 'the axes keys should have the same names'
+   
+    color = ['c','b','y','g','y']
+
+    levelxpts = {}
+    levelypts = {}
+
+    with export.mplfigure(name+'.png') as fig:
+        ax = fig.add_subplot(111)
+        for i, key in enumerate(yval.keys()):
+            im = ax.loglog(xval[key], yval[key], color[i])
+            if key in levels:
+                levelxpts[key] = []
+                levelypts[key] = []
+                lvl = 1
+                vals = list(levels.values())[0]
+                for i, val in enumerate(vals):
+                    if val == lvl:
+                        levelxpts[key] += [xval[key][i]]
+                        levelypts[key] += [yval[key][i]]
+                        lvl += 1
+                im = ax.scatter(levelxpts[key], levelypts[key])
+                
+        ax.autoscale(enable=True, axis='both', tight=True)
+
+        if labels:
+            ax.set_xlabel(labels[0])
+            ax.set_ylabel(labels[1])
+        ax.legend(yval.keys())
+        ax.set_title(title)
+
+#        if triangle:
+#
+#            xvals = [triangle[0],triangle[0]+10**triangle[2],triangle[0],triangle[0]]
+#            yvals = [triangle[1],triangle[1],triangle[1]-10**triangle[3],triangle[1]]
+#            print(xvals)
+#            print(yvals)
+#            im = ax.loglog(xvals,yvals)
+
+    
+    return
+
+
+

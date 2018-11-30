@@ -12,7 +12,7 @@ num: defines how much to refine
 from nutils import *
 import numpy
 
-def refine(domain, indicators, num):
+def refine(domain, indicators, num, maxlevel=10):
 
     if type(num) == int:
         assert len(domain) >= num, 'Amount of functions to be refined should be lower than the total amount of elements'
@@ -36,6 +36,11 @@ def refine(domain, indicators, num):
         mask[to_refine] = True
         marked = domain.supp(indicators.basis, mask)
 
-    domain = domain.refined_by(elem.transform for elem in marked)
+    for elem in marked:
+        print(len(elem.transform))
+        print(elem.transform)
+        if len(elem.transform) <= maxlevel+1:
+            print('is lower') 
+            domain = domain.refined_by((elem.transform,))
 
     return domain
