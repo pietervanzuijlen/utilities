@@ -132,10 +132,12 @@ def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='jet', title='
     return
 
 
-def plot_convergence(name, xval, yval, labels=None, title='', levels={}, triangle=None):
+def plot_convergence(name, xval, yval, labels=None, title='', levels={}, slopemarker=None):
+    
+    from mpltools import annotation
 
-    print(' Levels function should be improved!') 
-    print(' Triangle functionallity not implemented yet)') 
+    print('Levels function should be improved!') 
+    print('Triangle functionallity not implemented yet') 
 
     assert yval.keys() == xval.keys(), 'the axes keys should have the same names'
    
@@ -146,8 +148,23 @@ def plot_convergence(name, xval, yval, labels=None, title='', levels={}, triangl
 
     with export.mplfigure(name+'.png') as fig:
         ax = fig.add_subplot(111)
+        ax.autoscale(enable=True, axis='both', tight=True)
+
+        # Add labels if given
+        if labels:
+            ax.set_xlabel(labels[0])
+            ax.set_ylabel(labels[1])
+
+        # Add legend and title
+        ax.legend(yval.keys())
+        ax.set_title(title)
+
         for i, key in enumerate(yval.keys()):
+    
+            # make convergence plot
             im = ax.loglog(xval[key], yval[key], color[i])
+
+            # Indicating hierarchical levels
             if key in levels:
                 levelxpts[key] = []
                 levelypts[key] = []
@@ -158,15 +175,32 @@ def plot_convergence(name, xval, yval, labels=None, title='', levels={}, triangl
                         levelxpts[key] += [xval[key][i]]
                         levelypts[key] += [yval[key][i]]
                         lvl += 1
-                im = ax.scatter(levelxpts[key], levelypts[key])
-                
-        ax.autoscale(enable=True, axis='both', tight=True)
+                im = ax.scatter(levelxpts[key], levelypts[key], marker="_")
 
-        if labels:
-            ax.set_xlabel(labels[0])
-            ax.set_ylabel(labels[1])
-        ax.legend(yval.keys())
-        ax.set_title(title)
+            # Add slope indicator if given
+            try:
+                slope = slopemarker[key]
+
+                xmin = xval[key][0]
+                print(xmin)
+                xmax = xval[key][-1]
+                print(xmax)
+                xpos = 10**np.log10((xmax-xmin)/2)
+
+                ymin = yval[key][0]
+                print(ymin)
+                ymax = yval[key][-1]
+                print(ymax)
+                ypos = 10**np.log10((ymax-ymin)/2)
+
+                print(xpos)
+                print(ypos)
+
+                poly_settings = {'edgecolor': color[i]}
+
+                annotation.slope_marker((xpos,ypos), slope, ax=ax, poly_kwargs=poly_settings)
+            except:
+                print('No slope plotted') 
 
 #        if triangle:
 #

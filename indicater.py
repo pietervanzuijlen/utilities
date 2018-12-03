@@ -24,6 +24,7 @@ class functionbased:
         for i in range(len(basis)):
             self.indicators[i] = 0
 
+    @profile
     def add(self, targetdomain, basis, val):
 
         # calculate residual evaluated over each basisfunction
@@ -33,6 +34,7 @@ class functionbased:
 
         return self
 
+    @profile
     def abs(self):
 
         for key in self.indicators.keys():
@@ -63,6 +65,7 @@ class elementbased:
         assert len(self.indicators) == len(self.domain), 'Amount of indicators is not equal to amount of elements'
 
  
+    @profile
     def residualbased(self, targetdomain, val, inttype):
     
         # calculate the residual contribution per element
@@ -89,6 +92,7 @@ class elementbased:
         return self
 
     
+    @profile
     def goaloriented(self, targetdomain, val, inttype):
     
         # calculate the residual contribution per element
@@ -109,6 +113,7 @@ class elementbased:
         return self
 
     
+    @profile
     def abs(self):
 
         for key in self.indicators.keys():

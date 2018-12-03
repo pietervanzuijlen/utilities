@@ -37,10 +37,7 @@ def refine(domain, indicators, num, maxlevel=10):
         marked = domain.supp(indicators.basis, mask)
 
     for elem in marked:
-        print(len(elem.transform))
-        print(elem.transform)
         if len(elem.transform) <= maxlevel+1:
-            print('is lower') 
             domain = domain.refined_by((elem.transform,))
 
     return domain
