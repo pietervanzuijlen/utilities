@@ -136,9 +136,6 @@ def plot_convergence(name, xval, yval, labels=None, title='', levels={}, slopema
     
     from mpltools import annotation
 
-    print('Levels function should be improved!') 
-    print('Triangle functionallity not implemented yet') 
-
     assert yval.keys() == xval.keys(), 'the axes keys should have the same names'
    
     color = ['c','b','y','g','y']
@@ -155,10 +152,6 @@ def plot_convergence(name, xval, yval, labels=None, title='', levels={}, slopema
             ax.set_xlabel(labels[0])
             ax.set_ylabel(labels[1])
 
-        # Add legend and title
-        ax.legend(yval.keys())
-        ax.set_title(title)
-
         for i, key in enumerate(yval.keys()):
     
             # make convergence plot
@@ -166,51 +159,48 @@ def plot_convergence(name, xval, yval, labels=None, title='', levels={}, slopema
 
             # Indicating hierarchical levels
             if key in levels:
+                vals = levels[key]
                 levelxpts[key] = []
                 levelypts[key] = []
-                lvl = 1
-                vals = list(levels.values())[0]
-                for i, val in enumerate(vals):
-                    if val == lvl:
-                        levelxpts[key] += [xval[key][i]]
-                        levelypts[key] += [yval[key][i]]
-                        lvl += 1
-                im = ax.scatter(levelxpts[key], levelypts[key], marker="_")
+                lvl = vals[0] 
+                for j, val in enumerate(vals):
+                    if val > lvl:
+                        levelxpts[key] += [xval[key][j]]
+                        levelypts[key] += [yval[key][j]]
+                        lvl = val 
+                im = ax.scatter(levelxpts[key], levelypts[key], marker="+", s=8**2, c=color[i])
 
             # Add slope indicator if given
             try:
-                slope = slopemarker[key]
+                
+                xlog = np.log10(xval[key])
+                ylog = np.log10(yval[key])
+
+                fit  = np.polyfit(xlog,ylog,1)
+                print(fit)
+                
+                slope = slopemarker[key][0]
+                dist  = slopemarker[key][1]
 
                 xmin = xval[key][0]
-                print(xmin)
                 xmax = xval[key][-1]
-                print(xmax)
-                xpos = 10**np.log10((xmax-xmin)/2)
+                xpos = 10**((np.log10(xmax)+np.log10(xmin))/2)
 
                 ymin = yval[key][0]
-                print(ymin)
                 ymax = yval[key][-1]
-                print(ymax)
-                ypos = 10**np.log10((ymax-ymin)/2)
-
-                print(xpos)
-                print(ypos)
+                ypos = 10**((np.log10(ymax)+np.log10(ymin))/(2-dist))
 
                 poly_settings = {'edgecolor': color[i]}
 
-                annotation.slope_marker((xpos,ypos), slope, ax=ax, poly_kwargs=poly_settings)
+                annotation.slope_marker((xpos,ypos), slope, ax=ax, poly_kwargs=poly_settings, invert=True)
             except:
-                print('No slope plotted') 
+                None
 
-#        if triangle:
-#
-#            xvals = [triangle[0],triangle[0]+10**triangle[2],triangle[0],triangle[0]]
-#            yvals = [triangle[1],triangle[1],triangle[1]-10**triangle[3],triangle[1]]
-#            print(xvals)
-#            print(yvals)
-#            im = ax.loglog(xvals,yvals)
+        # Add legend and title
+        ax.legend(yval.keys())
+        ax.set_title(title)
 
-    
+   
     return
 
 
