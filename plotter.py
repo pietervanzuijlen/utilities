@@ -79,6 +79,8 @@ def plot_mesh(name, domain, geom, npoints=5, color=0.5, cmap='jet', title=''):
 
         ax.axis('off')
 
+    return 
+
 
 def plot_solution(name, domain, geom, val, npoints=5, cmap='jet', title='', bartitle='', alpha=0):
 

@@ -19,7 +19,16 @@ def refine(domain, indicators, num, maxlevel=10):
         threshold = sorted(list(indicators.indicators.values()))[-num]
     elif type(num) == float:
         assert num < 1, 'Fraction should be lower than 1'
-        threshold = max(list(indicators.indicators.values()))*(1-num)
+        row = sorted(list(indicators.indicators.values()))
+        total = sum(indicators.indicators.values())
+        Sum = 0
+        for i, val in enumerate(row[::-1]):
+            Sum += val
+            if Sum >= total*num:
+               threshold = row[-i] 
+               break
+               
+        #threshold = max(list(indicators.indicators.values()))*(1-num)
 
     to_refine = []
     
