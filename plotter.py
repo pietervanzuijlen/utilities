@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from   matplotlib import collections
 
-def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle='', alpha):
+def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle='', alpha=0):
 
     # Amount of subplots
     n = len(indicators)
