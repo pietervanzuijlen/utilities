@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from   matplotlib import collections
 
-def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle=''):
+def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle='', alpha):
 
     # Amount of subplots
     n = len(indicators)
@@ -48,7 +48,7 @@ def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle
             subshape = int(shape*10+i)
             ax = fig.add_subplot(subshape, aspect='equal')
             im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, val, shading='gouraud', cmap='summer', vmin=vmin, vmax=vmax)
-            ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.3))
+            ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.3, alpha=alpha))
             ax.autoscale(enable=True, axis='both', tight=True)
             ax.set_title(str(key))
             ax.axis('off')
