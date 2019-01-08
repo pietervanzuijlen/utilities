@@ -27,31 +27,28 @@ class functionbased:
     def add(self, targetdomain, basis, val):
 
         # calculate residual evaluated over each basisfunction
+        res = targetdomain.integrate(basis*val*function.J(self.geom), degree=self.degree*2)
         for i in range(len(basis)):
-            res  = targetdomain.integrate(basis[i]*val*function.J(self.geom), degree=self.degree)
-            self.indicators[i] += res
+            self.indicators[i] += res[i]
 
         return self
 
-    def abs(self):
-
-        for key in self.indicators.keys():
-            self.indicators[key] = abs(self.indicators[key])
-
-        return self
-    
+    def abs_indicators(self):
+        return {key:abs(val) for key, val in self.indicaters.items()}
+   
 class elementbased:
 
-    def __init__(self, domain, geom, degree):
+    def __init__(self, domain, geom, degree, dualspacetype=None):
         self.domain = domain
         self.geom   = geom
         self.degree = degree
         self.indicators = {} 
         self.elemsizes  = {}
         self.type   = 'elementbased'
+        self.dualspacetype  = dualspacetype
 
         # get element sizes
-        sizes = self.domain.integrate_elementwise(function.J(self.geom), degree=self.degree)
+        sizes = self.domain.integrate_elementwise(function.J(self.geom), degree=self.degree*2)
 
         # initiate indicators dictionary 
         for elem, h_K in zip(self.domain, sizes):
@@ -66,7 +63,7 @@ class elementbased:
     def residualbased(self, targetdomain, val, inttype):
     
         # calculate the residual contribution per element
-        res   = targetdomain.integrate_elementwise(val*function.J(self.geom), degree=self.degree)
+        res   = targetdomain.integrate_elementwise(val*function.J(self.geom), degree=self.degree*3)
         
         # assert variable lengths
         assert len(res) == len(targetdomain), 'Length of residual and target domain are not equal'
@@ -80,19 +77,21 @@ class elementbased:
     
         # link residuals to elements
         for elem, ires in zip(targetdomain, res):
-            head, tail = transform.lookup_item(elem.transform, self.domain.edict )
+            head, tail = transform.lookup_item(elem.transform, self.domain.edict)
             self.indicators[head] += ires * self.elemsizes[head]**a
             if inttype == 'interface':
-                head, tail = transform.lookup_item(elem.opposite, self.domain.edict )
+                head, tail = transform.lookup_item(elem.opposite, self.domain.edict)
                 self.indicators[head] += ires * self.elemsizes[head]**a
     
         return self
 
     
     def goaloriented(self, targetdomain, val, inttype):
+
+        assert self.dualspacetype == 'p-refined' or self.dualspacetype == 'k-refined', 'The dual space should be enriched with either `p-refined` or `k-refined`. Specify the enrichment method'
     
         # calculate the residual contribution per element
-        res   = targetdomain.integrate_elementwise(val*function.J(self.geom), degree=self.degree)
+        res   = targetdomain.integrate_elementwise(val*function.J(self.geom), degree=self.degree*2)
         
         # assert variable lengths
         assert len(res) == len(targetdomain), 'Length of residual and target domain are not equal'
@@ -100,18 +99,20 @@ class elementbased:
     
         # link residuals to elements
         for elem, ires in zip(targetdomain, res):
-            head, tail = transform.lookup_item(elem.transform[:-1], self.domain.edict )
+            if self.dualspacetype == 'p-refined':
+                head, tail = transform.lookup_item(elem.transform[:-1], self.domain.edict)
+            elif self.dualspacetype == 'k-refined':
+                head, tail = transform.lookup_item(elem.transform, self.domain.edict)
             self.indicators[head] += ires
             if inttype == 'interface':
-                head, tail = transform.lookup_item(elem.opposite[:-1], self.domain.edict )
+                if self.dualspacetype == 'p-refined':
+                    head, tail = transform.lookup_item(elem.opposite[:-1], self.domain.edict)
+                elif self.dualspacetype == 'k-refined':
+                    head, tail = transform.lookup_item(elem.opposite, self.domain.edict)
                 self.indicators[head] += ires
 
         return self
 
     
-    def abs(self):
-
-        for key in self.indicators.keys():
-            self.indicators[key] = abs(self.indicators[key])
-
-        return self
+    def abs_indicators(self):
+        return {key:abs(val) for key, val in self.indicators.items()}

@@ -81,8 +81,33 @@ def plot_mesh(name, domain, geom, npoints=5, color=0.5, cmap='jet', title=''):
 
     return 
 
+def plot_levels(name, domain, geom, npoints=5, cmap='summer', title=''):
 
-def plot_solution(name, domain, geom, val, npoints=5, cmap='jet', title='', bartitle='', alpha=0):
+    lvl_map = {}
+
+    for elem in domain:
+        trans = elem.transform
+        head, tail = transform.lookup(trans, domain.edict)
+        lvl_map[trans] = len(head)
+
+    lvl = function.elemwise(lvl_map, ())
+
+    bezier = domain.sample('bezier', npoints)
+    x,fill = bezier.eval([geom,lvl])
+
+    # background color is found as the color value between 0 and 1 projected on the colormap
+    with export.mplfigure(name+'.png') as fig:
+        fig.set_size_inches(6,6)
+        ax = fig.add_axes([0,0,1,1], aspect='equal')
+        im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, fill, shading='gouraud', cmap=cmap)
+        ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.5))
+        ax.set_title(title)
+
+        ax.axis('off')
+
+    return 
+
+def plot_solution(name, domain, geom, val, npoints=5, cmap='jet', title='', bartitle='', alpha=0, grid=False):
 
     bezier = domain.sample('bezier', npoints)
     x,val = bezier.eval([geom,val])
@@ -90,6 +115,10 @@ def plot_solution(name, domain, geom, val, npoints=5, cmap='jet', title='', bart
     with export.mplfigure(name+'.png') as fig:
         ax = fig.add_axes([.1,.1,.8,.8], aspect='equal')
         im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, val, shading='gouraud', cmap=cmap)
+        # Add grid mesh instead of regular mesh
+        if grid:
+            bezier = grid.sample('bezier', npoints)
+            x = bezier.eval(geom)
         ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.5, alpha=alpha))
         ax.set_title(title)
         ax.set_xmargin(0)
@@ -102,7 +131,7 @@ def plot_solution(name, domain, geom, val, npoints=5, cmap='jet', title='', bart
     return
 
 
-def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='jet', title='', bartitle='', every=.05, alpha=0, **arguments):
+def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='jet', title='', bartitle='', every=.05, alpha=0, grid=False, **arguments):
 
     ns.vector = val
 
@@ -121,8 +150,12 @@ def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='jet', title='
     with export.mplfigure(name+'.png') as fig:
         ax = fig.add_axes([.1,.1,.8,.8], aspect='equal')
         im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, vector, shading='gouraud', cmap=cmap)
-        ax.add_collection(collections.LineCollection(x[bezier.hull], colors='w', linewidths=.5, alpha=alpha))
         ax.tricontour(x[:,0], x[:,1], bezier.tri, stream, 16, colors='k', linestyles='dotted', linewidths=.5, zorder=9)
+        # Add grid mesh instead of regular mesh
+        if grid:
+            bezier = grid.sample('bezier', npoints)
+            x = bezier.eval(geom)
+        ax.add_collection(collections.LineCollection(x[bezier.hull], colors='w', linewidths=.5, alpha=alpha))
         ax.set_title(title)
         ax.set_xmargin(0)
         ax.set_ymargin(0)
