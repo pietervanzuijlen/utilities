@@ -78,7 +78,7 @@ def fractional_marking(domain, indicators, num, maxlevel=10):
     assert isinstance(num, float), 'num should be a float between 0 and 1' 
 
     values = [abs(val) for val in indicators.indicators.values()]
-    threshold = max(values)*num
+    threshold = max(values)*(1-num)
     to_refine = []
 
     for key in list(indicators.indicators.keys()):

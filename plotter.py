@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from   matplotlib import collections
 
-def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle='', alpha=0):
+def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle='', alpha=0, normalize=False):
 
     # Amount of subplots
     n = len(indicators)
@@ -30,10 +30,12 @@ def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle
         # Addition for non-absolute indicaters
         if vmin >= min(val.values()):
             vmin = min(val.values())
-        colors[key] = np.array([]) 
-        for i in range(len(domain)):
-            colors[key] = np.append(colors[key],np.ones(npoints**2)*val[i])
+        colors[key] = {} 
+        for i, elem in enumerate(domain):
+            elem.transform
+            colors[key][elem.transform] = val[i]
 
+    
     # Get domain shape
     bezier = domain.sample('bezier', npoints)
     x = bezier.eval(geom)
@@ -43,20 +45,26 @@ def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle
 
         # Making the subplots
         i = 0 
-        for key, val in colors.items():
+        for key in colors.keys():
+            val = function.elemwise(colors[key], ())
+            value = bezier.eval(val)
             i += 1
             subshape = int(shape*10+i)
             ax = fig.add_subplot(subshape, aspect='equal')
-            im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, val, shading='gouraud', cmap='summer', vmin=vmin, vmax=vmax)
+            if normalize:
+                im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, value, shading='gouraud', cmap='summer', vmin=vmin, vmax=vmax)
+            else:
+                im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, value, shading='gouraud', cmap='summer')
             ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.3, alpha=alpha))
             ax.autoscale(enable=True, axis='both', tight=True)
             ax.set_title(str(key))
             ax.axis('off')
 
         # Set the colorbar 
-        fig.subplots_adjust(left=0.05, right=0.75)
-        cbar_ax = fig.add_axes([0.85, 0.11, 0.03, 0.77], title=bartitle)
-        fig.colorbar(im, cax=cbar_ax)
+        if normalize:
+            fig.subplots_adjust(left=0.05, right=0.75)
+            cbar_ax = fig.add_axes([0.85, 0.11, 0.03, 0.77], title=bartitle)
+            fig.colorbar(im, cax=cbar_ax)
 
     return 
 
