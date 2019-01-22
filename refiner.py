@@ -13,43 +13,25 @@ For function based, support detectors need to be added
 from nutils import *
 import numpy
 
-def dorfler_marking(domain, indicators, num, maxlevel=10):
+def dorfler_marking(domain, indicators, num, basis, maxlevel=10, select_type=None):
 
     assert num > 0 and num <= 1, 'the fraction should be between 0 and 1'
-    assert indicators.type == 'elementbased' or indicators.type == 'functionbased', 'indicater type should be elementbased or functionbased'
-    assert isinstance(num, float), 'num should be a float between 0 and 1' 
+    assert select_type in [None, 'same_level', 'highest_supp','supp_only'], 'Invalid selection type given'
 
-    if indicators.type == 'elementbased':
+    if len(indicators) == len(domain):
+        indtype = 'elementbased'
+    elif len(indicators) == len(basis):
+        indtype = 'functionbased'
+    else:
+        assert False, 'No indicator type has been found. Check if the right domain or basis is given'
+
+    if indtype == 'elementbased':
 
         transforms = []
-        values = []
-        for elem in domain:
-            head, tail = transform.lookup_item(elem.transform, domain.edict)
-            transforms.append(elem.transform)
-            values.append( abs(indicators.indicators[head]) )
+        for trans in domain.transforms:
+            transforms.append(trans)
 
-        values = numpy.array(values)
-
-        sortindi = numpy.flip(numpy.argsort(values))
-        sortvalues = values[sortindi]
-        
-        thres  = num * sortvalues.sum()
-        cumsum = sortvalues.cumsum()
-        select = numpy.zeros(len(cumsum),dtype=bool)
-        for i, v in enumerate(cumsum):
-            select[i] = True
-            if v > thres:
-                break
-        refindi = sortindi[select]
-        reftransforms = tuple(transforms[i] for i in refindi if len(transforms[i]) <= maxlevel+1)
-
-    elif indicators.type == 'functionbased':
-
-        values = []
-        for i in indicators.indicators.keys():
-            values.append( abs(indicators.indicators[i]) )
-
-        values = numpy.array(values)
+        values = numpy.array(abs(indicators))
 
         sortindi = numpy.flip(numpy.argsort(values))
         sortvalues = values[sortindi]
@@ -63,95 +45,185 @@ def dorfler_marking(domain, indicators, num, maxlevel=10):
                 break
         refindi = sortindi[select]
 
-        mask = numpy.zeros(len(indicators.basis), dtype=bool)
-        mask[refindi] = True
+        if select_type == 'same_level':
+            marked = () 
+            for ielem in refindi:
+                marked = marked + tuple(select_same_level(domain, basis, ielem))
+        elif select_type == 'highest_supp':
+            marked = () 
+            for ielem in refindi:
+                marked = marked + tuple(select_highest_supp(domain, basis, ielem, indicators))
+        elif select_type == 'supp_only':
+            marked = tuple(select_supp_only(domain, basis, refindi))
+        elif select_type != None:
+            print('Selection type not recognised. No selection type is applied.') 
+            marked = tuple(transforms[i] for i in refindi if len(transforms[i]) <= maxlevel+1)
+        else:
+            marked = tuple(transforms[i] for i in refindi if len(transforms[i]) <= maxlevel+1)
 
-        reftransforms = tuple(elem.transform for elem in domain.supp(indicators.basis, mask) if len(elem.transform) <= maxlevel+1)
+    elif indtype == 'functionbased':
 
-    domain = domain.refined_by(reftransforms)
+        values = numpy.array(abs(indicators))
+
+        sortindi = numpy.flip(numpy.argsort(values))
+        sortvalues = values[sortindi]
+        
+        thres  = num * sortvalues.sum()
+        cumsum = sortvalues.cumsum()
+        select = numpy.zeros(len(cumsum),dtype=bool)
+        for i, v in enumerate(cumsum):
+            select[i] = True
+            if v > thres:
+                break
+        refindi = sortindi[select]
+
+        elemind = basis.get_support(numpy.array(refindi))
+        marked = domain.transforms[elemind]
+
+    initial_size = len(domain)
+
+    domain = domain.refined_by(marked)
+
+    if len(domain) == initial_size:
+        log.user('Nothing is refined')
 
     return domain
 
-def fractional_marking(domain, indicators, num, maxlevel=10):
+def fractional_marking(domain, indicators, num, basis, maxlevel=10, select_type=None):
 
-    assert indicators.type == 'elementbased' or indicators.type == 'functionbased'
-    assert isinstance(num, float), 'num should be a float between 0 and 1' 
+    assert num > 0 and num <= 1, 'num should be a float between 0 and 1' 
+    assert select_type in [None, 'same_level', 'highest_supp'], 'Invalid selection type given'
 
-    values = [abs(val) for val in indicators.indicators.values()]
+    if len(indicators) == len(domain):
+        indtype = 'elementbased'
+    elif len(indicators) == len(basis):
+        indtype = 'functionbased'
+    else:
+        assert False, 'No indicator type has been found. Check if the right domain or basis is given'
+
+    values = abs(indicators)
     threshold = max(values)*(1-num)
-    to_refine = []
+    refindi = []
 
-    for key in list(indicators.indicators.keys()):
-        if abs(indicators.indicators[key]) >= threshold:
-            to_refine += [key]
+    for i, val in enumerate(values):
+        if val >= threshold:
+            refindi += [i]
 
-    if indicators.type == 'elementbased':
-        marked = numpy.array(domain.elements)[to_refine]
-    elif indicators.type == 'functionbased':
-        mask = numpy.zeros(len(indicators.basis), dtype=bool)
-        mask[to_refine] = True
-        marked = domain.supp(indicators.basis, mask)
+    if indtype == 'elementbased':
+        if select_type == 'same_level':
+            marked = () 
+            for ielem in refindi:
+                marked = marked + tuple(select_same_level(domain, basis, ielem))
+        elif select_type == 'highest_supp':
+            marked = () 
+            for ielem in refindi:
+                marked = marked + tuple(select_highest_supp(domain, basis, ielem, indicators))
+        elif select_type == 'supp_only':
+            marked = tuple(select_supp_only(domain, basis, refindi))
+        elif select_type != None:
+            print('Selection type not recognised. No selection type is applied.') 
+            marked = [domain.transforms[i] for i in refindi]
+        else:
+            marked = [domain.transforms[i] for i in refindi]
+    elif indtype == 'functionbased':
+        elemind = basis.get_support(numpy.array(refindi))
+        marked = domain.transforms[elemind]
 
-    for elem in marked:
-        if len(elem.transform) <= maxlevel+1:
-            domain = domain.refined_by((elem.transform,))
+    initial_size = len(domain)
+
+    for trans in marked:
+        if len(trans) <= maxlevel+1:
+            domain = domain.refined_by((trans,))
+
+    if len(domain) == initial_size:
+        log.user('Nothing is refined')
 
     return domain
 
-def portional_marking(domain, indicators, num, maxlevel=10):
+def portional_marking(domain, indicators, num, basis, maxlevel=10, select_type=None):
 
-    assert indicators.type == 'elementbased' or indicators.type == 'functionbased'
     assert isinstance(num, int), 'num should be an integer' 
+    assert select_type in [None, 'same_level', 'highest_supp'], 'Invalid selection type given'
 
-    values = [abs(val) for val in indicators.indicators.values()]
-    keys   = [key for key in indicators.indicators.keys()]
-    to_refine = numpy.argsort(values)[-num:]
+    if len(indicators) == len(domain):
+        indtype = 'elementbased'
+    elif len(indicators) == len(basis):
+        indtype = 'functionbased'
+    else:
+        assert False, 'No indicator type has been found. Check if the right domain or basis is given'
 
-    if indicators.type == 'elementbased':
+    refindi = numpy.argsort(abs(indicators))[-num:]
+
+    if indtype == 'elementbased':
         assert len(domain) >= num, 'Amount of elements to be refined should be lower than the total amount of elements'
-        marked = numpy.array(domain.elements)[to_refine]
-    elif indicators.type == 'functionbased':
-        assert len(indicators.basis) >= num, 'Amount of functions to be refined should be lower than the total amount of functions'
-        mask = numpy.zeros(len(indicators.basis), dtype=bool)
-        mask[to_refine] = True
-        marked = domain.supp(indicators.basis, mask)
+        if select_type == 'same_level':
+            marked = () 
+            for ielem in refindi:
+                marked = marked + tuple(select_same_level(domain, basis, ielem))
+        elif select_type == 'highest_supp':
+            marked = () 
+            for ielem in refindi:
+                marked = marked + tuple(select_highest_supp(domain, basis, ielem, indicators))
+        elif select_type == 'supp_only':
+            marked = tuple(select_supp_only(domain, basis, refindi))
+        elif select_type != None:
+            print('Selection type not recognised. No selection type is applied.') 
+            marked = [domain.transforms[i] for i in refindi]
+        else:
+            marked = [domain.transforms[i] for i in refindi]
+    elif indtype == 'functionbased':
+        assert len(basis) >= num, 'Amount of functions to be refined should be lower than the total amount of functions'
+        elemind = basis.get_support(numpy.array(refindi))
+        marked = domain.transforms[elemind]
+         
 
-    for elem in marked:
-        if len(elem.transform) <= maxlevel+1:
-            domain = domain.refined_by((elem.transform,))
+    for trans in marked:
+        if len(trans) <= maxlevel+1:
+            domain = domain.refined_by((trans,))
 
     return domain
+    
 
+#Element selection functions
 
+def select_same_level(domain, basis, ielem):
+    funcs = basis.get_dofs(ielem)
+    irefelems = basis.get_support(funcs)
+    ilvl = len(domain.transforms[ielem])
+    transforms = []
+    for irefelem in irefelems:
+        trans = domain.transforms[irefelem] 
+        if len(trans) <= ilvl:
+            transforms.append(trans)
 
-    #     assert num < 1, 'Fraction should be lower than 1'
-    #     row = sorted(list(indicators.indicators.values()))
-    #     total = sum(indicators.indicators.values())
-    #     Sum = 0
-    #     for i, val in enumerate(row[::-1]):
-    #         Sum += val
-    #         if Sum >= total*num:
-    #            threshold = row[-i] 
-    #            break
-    #            
-    #     #threshold = max(list(indicators.indicators.values()))*(1-num)
+    return transforms 
 
-    # to_refine = []
-    # 
-    # for key in list(indicators.indicators.keys()):
-    #     if indicators.indicators[key] >= threshold:
-    #         to_refine += [key]
-    #         
-    # if indicators.type == 'elementbased':
-    #     assert len(domain) == len(indicators.indicators), 'Amount of indicators and amount of elements are not equal'
-    #     marked = numpy.array(domain.elements)[to_refine]
-    # elif indicators.type == 'functionbased':
-    #     assert len(indicators.basis) == len(indicators.indicators), 'Amount of indicators and amount of basis functions are not equal'
-    #     mask = numpy.zeros(len(indicators.basis), dtype=bool)
-    #     mask[to_refine] = True
-    #     marked = domain.supp(indicators.basis, mask)
+def select_highest_supp(domain, basis, ielem, indicators):
+    funcs = basis.get_dofs(ielem)
+    ind_sum = 0 
+    iref = []
+    ilvl = len(domain.transforms[ielem])
+    for func in funcs:
+        irefelems = basis.get_support(func)
+        if sum(indicators[irefelems]) > ind_sum:
+            ind_sum = sum(indicators[irefelems])
+            iref = irefelems
+    print(type(irefelems))
+    unsorted = domain.transforms[irefelems]
+    transforms = []
+    for trans in unsorted:
+        if len(trans) <= ilvl:
+            transforms.append(trans)
 
-    # for elem in marked:
-    #     if len(elem.transform) <= maxlevel+1:
-    #         domain = domain.refined_by((elem.transform,))
+    return transforms 
 
+def select_supp_only(domain, basis, ielems):
+    funcs = basis.get_dofs(ielems)
+    irefelems = []
+    for func in funcs:
+        supp = basis.get_support(func)
+        if all(i in ielems for i in supp):
+            irefelems += [ielem for ielem in supp]
+    transforms = [domain.transforms[i] for i in irefelems]
+
+    return transforms 

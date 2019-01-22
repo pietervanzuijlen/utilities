@@ -1,5 +1,5 @@
 from   nutils import *
-import numpy as np
+import numpy 
 import matplotlib.pyplot as plt
 from   matplotlib import collections
 
@@ -10,7 +10,7 @@ def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle
 
     # Define subplot shape
     if shape == 0:
-        nsqrt = np.sqrt(n)
+        nsqrt = numpy.sqrt(n)
         if nsqrt <= round(nsqrt):
             shape = round(nsqrt)*10+round(nsqrt)
         else:
@@ -25,17 +25,15 @@ def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle
 
     # Assemble colors for the plots
     for key, val in indicators.items():
-        if vmax <= max(val.values()):
-            vmax = max(val.values())
+        if vmax <= max(val):
+            vmax = max(val)
         # Addition for non-absolute indicaters
-        if vmin >= min(val.values()):
-            vmin = min(val.values())
+        if vmin >= min(val):
+            vmin = min(val)
         colors[key] = {} 
-        for i, elem in enumerate(domain):
-            elem.transform
-            colors[key][elem.transform] = val[i]
+        for i, trans in enumerate(domain.transforms):
+            colors[key][trans] = val[i]
 
-    
     # Get domain shape
     bezier = domain.sample('bezier', npoints)
     x = bezier.eval(geom)
@@ -45,16 +43,20 @@ def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle
 
         # Making the subplots
         i = 0 
-        for key in colors.keys():
-            val = function.elemwise(colors[key], ())
-            value = bezier.eval(val)
+        for key, val in indicators.items():
+            trans = domain.transforms
+            colors = tuple(val) 
+            elemval = function.elemwise(trans, colors)
+            elemvalue = bezier.eval(elemval)
             i += 1
             subshape = int(shape*10+i)
             ax = fig.add_subplot(subshape, aspect='equal')
+
             if normalize:
-                im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, value, shading='gouraud', cmap='summer', vmin=vmin, vmax=vmax)
+                im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, elemvalue, shading='gouraud', cmap='summer', vmin=vmin, vmax=vmax)
             else:
-                im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, value, shading='gouraud', cmap='summer')
+                im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, elemvalue, shading='gouraud', cmap='summer')
+                fig.colorbar(im)
             ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.3, alpha=alpha))
             ax.autoscale(enable=True, axis='both', tight=True)
             ax.set_title(str(key))
@@ -67,7 +69,6 @@ def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle
             fig.colorbar(im, cax=cbar_ax)
 
     return 
-
 
 def plot_mesh(name, domain, geom, npoints=5, color=0.5, cmap='jet', title=''):
 
@@ -84,32 +85,31 @@ def plot_mesh(name, domain, geom, npoints=5, color=0.5, cmap='jet', title=''):
         im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, fill, shading='gouraud', cmap=cmap, vmin=vmin, vmax=vmax)
         ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.5))
         ax.set_title(title)
-
         ax.axis('off')
 
     return 
 
 def plot_levels(name, domain, geom, npoints=5, cmap='summer', title=''):
 
-    lvl_map = {}
-
-    for elem in domain:
-        trans = elem.transform
-        head, tail = transform.lookup(trans, domain.edict)
-        lvl_map[trans] = len(head)
-
-    lvl = function.elemwise(lvl_map, ())
+    levels = numpy.array([len(trans) for trans in domain.transforms])
+    levels = tuple(levels-min(levels)+1)
+    lvl = function.elemwise(domain.transforms, levels)
 
     bezier = domain.sample('bezier', npoints)
     x,fill = bezier.eval([geom,lvl])
 
     # background color is found as the color value between 0 and 1 projected on the colormap
     with export.mplfigure(name+'.png') as fig:
-        fig.set_size_inches(6,6)
-        ax = fig.add_axes([0,0,1,1], aspect='equal')
+        ax = fig.add_axes([.1,.1,.8,.8], aspect='equal')
         im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, fill, shading='gouraud', cmap=cmap)
         ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.5))
         ax.set_title(title)
+        ax.set_xmargin(0)
+        ax.set_ymargin(0)
+
+        cbar_ax = fig.add_axes([0.85, 0.1, 0.03, 0.8], title='Levels')
+        fig.colorbar(im, cax=cbar_ax)
+        cbar_ax.yaxis.set_ticks_position('right')
 
         ax.axis('off')
 
@@ -214,30 +214,57 @@ def plot_convergence(name, xval, yval, labels=None, title='', levels={}, slopema
                 im = ax.scatter(levelxpts[key], levelypts[key], marker="+", s=8**2, c=color[i])
 
             # Add slope indicator if given
-            try:
+            if slopemarker:
                 
-                xlog = np.log10(xval[key])
-                ylog = np.log10(yval[key])
+               # xlog = numpy.log10(xval[key])
+               # ylog = numpy.log10(yval[key])
 
-                fit  = np.polyfit(xlog,ylog,1)
-                print(fit)
+               # fit  = numpy.polyfit(xlog,ylog,1)
+               # log.user(fit)
+               # 
+               # slope = slopemarker[key][0]
+               # dist  = slopemarker[key][1]
+
+               # xmin = xval[key][0]
+               # xmax = xval[key][-1]
+               # xpos = 10**((numpy.log10(xmax)+numpy.log10(xmin))/2)
+
+               # ymin = yval[key][0]
+               # ymax = yval[key][-1]
+               # ypos = 10**((numpy.log10(ymax)+numpy.log10(ymin))/(2-dist))
+
+               # poly_settings = {'edgecolor': color[i]}
+
+               # annotation.slope_marker((xpos,ypos), slope, ax=ax, poly_kwargs=poly_settings, invert=True)
+
+                L = 0.3
                 
-                slope = slopemarker[key][0]
-                dist  = slopemarker[key][1]
+                xlog = numpy.log10(xval[key])
+                ylog = numpy.log10(yval[key])
 
+                fit  = numpy.polyfit(xlog,ylog,1)
+                log.user(fit)
+
+                slope = int(fit[0])
+                
                 xmin = xval[key][0]
                 xmax = xval[key][-1]
-                xpos = 10**((np.log10(xmax)+np.log10(xmin))/2)
+                Lx   = numpy.log10(xmax)-numpy.log10(xmin)
+
+                x1   = 10**(numpy.log10(xmin)+Lx*(0.5-L/2))
+                x2   = 10**(numpy.log10(xmin)+Lx*(0.5+L/2))
+                xtxt = 10**(numpy.log10(xmin)+Lx*0.5)
 
                 ymin = yval[key][0]
                 ymax = yval[key][-1]
-                ypos = 10**((np.log10(ymax)+np.log10(ymin))/(2-dist))
+                Ly   = numpy.log10(ymax)-numpy.log10(ymin)
 
-                poly_settings = {'edgecolor': color[i]}
-
-                annotation.slope_marker((xpos,ypos), slope, ax=ax, poly_kwargs=poly_settings, invert=True)
-            except:
-                None
+                y1   = 10**(numpy.log10(ymin)+Ly*(0.6-L/2))
+                y2   = 10**(numpy.log10(ymin)+Ly*(0.6-L/2)+Lx*slope*L)
+                ytxt = 10**(numpy.log10(ymin)+Ly*(0.6-L/2)+Lx*slope*L/2)
+                
+                im = ax.loglog([x1,x2], [y1,y2] , 'k')
+                im = ax.text(xtxt,ytxt,str(slope))
 
         # Add legend and title
         ax.legend(yval.keys())
