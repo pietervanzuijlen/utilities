@@ -11,10 +11,12 @@ def integrate(domain, geom, degree, value, targetdomain, interfaces=None, depth=
     res = targetdomain.integrate_elementwise(value*function.J(geom), degree=degree*2)
 
     heads = [domain.transforms.index_with_tail(trans[:depth])[0] for trans in targetdomain.transforms]
-    indicators[heads] += res
+    for i, head in enumerate(heads):
+        indicators[head] += res[i]
 
     if interfaces:
         heads = [domain.transforms.index_with_tail(trans[:depth])[0] for trans in targetdomain.opposites]
-        indicators[heads] += res
+        for i, head in enumerate(heads):
+            indicators[head] += res[i]
 
     return indicators

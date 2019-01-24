@@ -92,7 +92,7 @@ def plot_mesh(name, domain, geom, npoints=5, color=0.5, cmap='jet', title=''):
 def plot_levels(name, domain, geom, minlvl=1, npoints=5, cmap='summer', title=''):
 
     levels = numpy.array([len(trans) for trans in domain.transforms])
-    levels = tuple(levels-minlvl+1)
+    levels = tuple(levels-minlvl-1)
     lvl = function.elemwise(domain.transforms, levels)
 
     bezier = domain.sample('bezier', npoints)

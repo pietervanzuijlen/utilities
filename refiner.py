@@ -13,7 +13,7 @@ For function based, support detectors need to be added
 from nutils import *
 import numpy
 
-def refine(domain, indicators, num, basis, maxlevel=10, marker_type=None, select_type=None):
+def refine(domain, indicators, num, basis, maxlevel=10, marker_type=None, select_type=None, refined_check=False):
 
     indicators = abs(indicators)
 
@@ -38,8 +38,6 @@ def refine(domain, indicators, num, basis, maxlevel=10, marker_type=None, select
     else:
         assert False, 'Invalid marker type or num has been giving'
 
-    print(refindices)
-
     # Get the transforms of elements to be refined
     if len(indicators) == len(domain):
     # elementbased
@@ -49,6 +47,8 @@ def refine(domain, indicators, num, basis, maxlevel=10, marker_type=None, select
             marked = select_highest_supp(domain, basis, refindices, indicators)
         elif select_type=='same_level':
             marked = select_same_level(domain, basis, refindices)
+        else:
+            assert False, 'Invalid selection type or num has been giving'
 
     elif len(indicators) == len(basis):
     # functionbased
@@ -59,12 +59,18 @@ def refine(domain, indicators, num, basis, maxlevel=10, marker_type=None, select
 
     # Discard elems which have reached maxlevel
     to_refine = tuple(trans for trans in marked if len(trans) <= maxlevel+1)
-    if not to_refine:
+    if (not to_refine and refined_check):
         log.user('Nothing is refined')
+        refined = False
+    if (to_refine and refined_check):
+        refined = True
         
     domain = domain.refined_by(to_refine)
-
-    return domain
+    
+    if refined_check:
+        return domain, refined
+    else:
+        return domain
 
 
 def select_same_level(domain, basis, ielems):
@@ -82,13 +88,10 @@ def select_highest_supp(domain, basis, ielems, indicators):
     for ielem in ielems:
         ilvl = len(domain.transforms[ielem])
         funcs = basis.get_dofs(ielem)
-        print(funcs)
         indsum = []
         for func in funcs:
             suppelems = basis.get_support(func)
             indsum += [sum(indicators[suppelems])]
-        print(indsum)
         irefelems = basis.get_support(funcs[numpy.argmax(indsum)])
-        print(irefelems)
         marked += [trans for trans in domain.transforms[irefelems] if len(trans) <= ilvl]
     return marked 
