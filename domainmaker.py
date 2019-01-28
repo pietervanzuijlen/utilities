@@ -184,5 +184,86 @@ def channels(uref=0, W=2, H=1, h1=0.2, h2=0.4, w1=0.2, w2=0.2, elemsize=0.1):
           center  = 'patch1-top,patch3-right,patch4-left,patch6-bottom',
           )
 
+def annulus(*args, uref=0, Rin=1, Rout=4, **kwargs):
+
+    Rmid = (Rin + Rout)/2
+
+    domain, param = mesh.rectilinear([numpy.linspace(0,1,2),numpy.linspace(0,1,2)])
+
+    # define the function basis of degree 2 
+    funcsp = domain.basis('th-spline', degree=2 )
+
+    # get the initial control points 
+    paramcps = domain.project( param, onto=funcsp.vector(2), geometry=param, ischeme='gauss4' ).reshape(2,-1).T
+
+    # assign control point position
+    paramcps[0] = [Rin,0]
+    paramcps[1] = [Rin,Rin]
+    paramcps[2] = [0,Rin]
+    paramcps[3] = [Rmid,0]
+    paramcps[4] = [Rmid,Rmid]
+    paramcps[5] = [0,Rmid]
+    paramcps[6] = [Rout,0]
+    paramcps[7] = [Rout,Rout]
+    paramcps[8] = [0,Rout]
+
+    # assign control points weight
+    cws = np.ones(len(funcsp))
+    cws[1] = 1/2**.5
+    cws[4] = 1/2**.5
+    cws[7] = 1/2**.5 
+   
+    # make nurbes with new control points and weights
+    weightfunc = funcsp * cws.T 
+    nurbsfunc  = weightfunc / weightfunc.sum([0]) 
+ 
+    # apply uniform refinement
+    domain = domain.refine(uref)
+
+    # define new geometry
+    geom = nurbsfunc.vector(2).dot(paramcps.T.ravel()) 
 
     return domain, geom
+
+def skelghost(grid, trim):
+
+    # Get indices of elements of the grid which are inside the trimmed domain
+    indices = np.array([i for i, trans in enumerate(grid.transforms) if trim.transforms.contains(trans)])
+
+    # Construct the list of references for the background topology
+    gridrefs = grid.references
+    backgroundrefs = []
+    for i, ref in enumerate(gridrefs):
+        if i in indices:
+            backgroundrefs.append(ref)
+        else:
+            backgroundrefs.append(ref.empty)
+    
+    # Define the background topoloty as a subset of the grid
+    background = topology.SubsetTopology(grid, backgroundrefs)
+
+    skeleton = background.interfaces
+
+    # Get indices of elements on the trimmed boundary
+    trimindices = [trim.transforms.index_with_tail(trans)[0] for trans in trim.boundary['trimmed'].transforms]
+    # Filter duplications
+    trimindices = list(set(trimindices))
+    # Translate indices to indices in the background
+    backgroundindi = [background.transforms.index(trans) for trans in trim.transforms[trimindices]]
+
+    grefs = []
+    # Find references of the interfaces in the cutelements
+    for iface, oppo, ref in zip(skeleton.transforms, skeleton.opposites, skeleton.references):
+        ifacehead = background.transforms.index_with_tail(iface)[0]
+        oppohead = background.opposites.index_with_tail(oppo)[0]
+        if ifacehead in backgroundindi or oppohead in backgroundindi:
+            grefs.append(ref)
+        else:
+            grefs.append(ref.empty)
+
+    assert len(skeleton) == len(grefs), 'Lengths don`t comply'
+
+    # Define the ghost topoloty as a subset of the skeleton
+    ghost = topology.SubsetTopology(background.interfaces, grefs)
+
+    return background.interfaces, ghost
