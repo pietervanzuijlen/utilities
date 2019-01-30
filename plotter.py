@@ -89,7 +89,24 @@ def plot_mesh(name, domain, geom, npoints=5, color=0.5, cmap='jet', title=''):
 
     return 
 
-def plot_levels(name, domain, geom, minlvl=1, npoints=5, cmap='summer', title=''):
+def plot_interfaces(name, domain, geom, interfaces, npoints=5, color=0.5, cmap='summer', title='', alpha=1):
+
+    vmin = 0
+    vmax = 1
+
+    domsample = domain.sample('bezier', npoints)
+    x_domain, fill = domsample.eval([geom, color])
+    ifacesample = interfaces.sample('bezier', npoints*10)
+    x_iface = ifacesample.eval(geom)
+
+    with export.mplfigure(name+'.png') as fig:
+      ax = fig.add_subplot(111, aspect='equal')
+      im = ax.tripcolor(x_domain[:,0], x_domain[:,1], domsample.tri, fill, shading='gouraud', cmap=cmap, alpha=alpha)
+      ax.scatter(x_iface[:,0],x_iface[:,1],c='r',s=.8)
+
+    return 
+
+def plot_levels(name, domain, geom, minlvl=1, npoints=5, cmap='summer', title='', alpha=1):
 
     levels = numpy.array([len(trans) for trans in domain.transforms])
     levels = tuple(levels-minlvl-1)
@@ -101,7 +118,7 @@ def plot_levels(name, domain, geom, minlvl=1, npoints=5, cmap='summer', title=''
     # background color is found as the color value between 0 and 1 projected on the colormap
     with export.mplfigure(name+'.png') as fig:
         ax = fig.add_axes([.1,.1,.8,.8], aspect='equal')
-        im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, fill, shading='gouraud', cmap=cmap)
+        im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, fill, shading='gouraud', cmap=cmap, alpha=alpha)
         ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.5))
         ax.set_title(title)
         ax.set_xmargin(0)
@@ -115,10 +132,10 @@ def plot_levels(name, domain, geom, minlvl=1, npoints=5, cmap='summer', title=''
 
     return 
 
-def plot_solution(name, domain, geom, val, npoints=5, cmap='jet', title='', bartitle='', alpha=0, grid=False):
+def plot_solution(name, domain, geom, val, npoints=5, cmap='jet', title='', bartitle='', alpha=0, grid=False, **arguments):
 
     bezier = domain.sample('bezier', npoints)
-    x,val = bezier.eval([geom,val])
+    x,val = bezier.eval([geom,val], arguments=arguments)
 
     with export.mplfigure(name+'.png') as fig:
         ax = fig.add_axes([.1,.1,.8,.8], aspect='equal')
@@ -245,7 +262,7 @@ def plot_convergence(name, xval, yval, labels=None, title='', levels={}, slopema
                 fit  = numpy.polyfit(xlog,ylog,1)
                 log.user(fit)
 
-                slope = int(fit[0])
+                slope = int(round(fit[0]))
                 
                 xmin = xval[key][0]
                 xmax = xval[key][-1]

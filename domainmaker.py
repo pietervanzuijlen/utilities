@@ -247,7 +247,7 @@ def skelghost(grid, trim):
     # Get indices of elements on the trimmed boundary
     trimindices = [trim.transforms.index_with_tail(trans)[0] for trans in trim.boundary['trimmed'].transforms]
     # Filter duplications
-    trimindices = list(set(trimindices))
+    trimindices = sorted(set(trimindices))
     # Translate indices to indices in the background
     backgroundindi = [background.transforms.index(trans) for trans in trim.transforms[trimindices]]
 
