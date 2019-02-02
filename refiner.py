@@ -13,7 +13,7 @@ For function based, support detectors need to be added
 from nutils import *
 import numpy
 
-def refine(domain, indicators, num, basis, maxlevel=10, marker_type=None, select_type=None, refined_check=False):
+def refine(domain, indicators, num, basis, maxlevel=10, grid=None, marker_type=None, select_type=None):
 
     indicators = abs(indicators)
 
@@ -59,18 +59,23 @@ def refine(domain, indicators, num, basis, maxlevel=10, marker_type=None, select
 
     # Discard elems which have reached maxlevel
     to_refine = tuple(trans for trans in marked if len(trans) <= maxlevel+1)
-    if (not to_refine and refined_check):
+    if not to_refine:
         log.user('Nothing is refined')
-        refined = False
-    if (to_refine and refined_check):
-        refined = True
+        something_refined = False
+    if to_refine:
+        something_refined = True
         
     domain = domain.refined_by(to_refine)
-    
-    if refined_check:
-        return domain, refined
-    else:
-        return domain
+
+    # Refinement with grid
+    if grid:
+        gridrefindices = numpy.array([grid.transforms.index(trans) for trans in to_refine])
+        to_refine_grid = tuple(trans for trans in grid.transforms[gridrefindices])
+        grid = grid.refined_by(tuple(to_refine_grid))
+
+        return domain, grid, something_refined
+    else: 
+        return domain, something_refined
 
 
 def select_same_level(domain, basis, ielems):

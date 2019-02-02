@@ -204,7 +204,8 @@ def plot_convergence(name, xval, yval, labels=None, title='', levels={}, slopema
     levelypts = {}
 
     with export.mplfigure(name+'.png') as fig:
-        ax = fig.add_subplot(111)
+        ax = fig.add_axes([.2,.1,.75,.8])
+        #ax = fig.add_subplot(111)
         ax.autoscale(enable=True, axis='both', tight=True)
 
         # Add labels if given
