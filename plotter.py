@@ -2,6 +2,7 @@ from   nutils import *
 import numpy 
 import matplotlib.pyplot as plt
 from   matplotlib import collections
+import matplotlib.lines as mlines
 
 def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle='', alpha=0, normalize=False):
 
@@ -202,6 +203,7 @@ def plot_convergence(name, xval, yval, labels=None, title='', levels={}, slopema
 
     levelxpts = {}
     levelypts = {}
+    handles = []
 
     with export.mplfigure(name+'.png') as fig:
         ax = fig.add_axes([.2,.1,.75,.8])
@@ -217,7 +219,7 @@ def plot_convergence(name, xval, yval, labels=None, title='', levels={}, slopema
     
             # make convergence plot
             im = ax.loglog(xval[key], yval[key], color[i])
-
+            handles += [mlines.Line2D([], [],color=color[i], label=key)]
             # Indicating hierarchical levels
             if key in levels:
                 vals = levels[key]
@@ -285,7 +287,7 @@ def plot_convergence(name, xval, yval, labels=None, title='', levels={}, slopema
                 im = ax.text(xtxt,ytxt,str(slope))
 
         # Add legend and title
-        ax.legend(yval.keys())
+        ax.legend(handles=handles)
         ax.set_title(title)
 
    

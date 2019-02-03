@@ -89,7 +89,7 @@ def lshape(*args, uref=0, width=1, height=1, **kwargs):
 
     return domain, geom
 
-def porous(*args, uref=0, rm=.2, rc=.2, M0=.5, M1=.5, **kwargs):
+def porous(*args, uref=0, rm=.2, r1=.2, r2=.2, r3=.2, r4=.2, M0=.5, M1=.5, **kwargs):
     
     # define patches by verts       # | patchnumber
     patches=[[ [6, 7], [1, 4]],     # | 0
@@ -102,22 +102,22 @@ def porous(*args, uref=0, rm=.2, rc=.2, M0=.5, M1=.5, **kwargs):
              [ [13, 14], [10, 6]]]  # | 7
 
     # define vert positions         # | vertnumber
-    patchverts = [[rc,0],           # | 0  
-                  [1/2,0],          # | 1
-                  [1-rc,0],         # | 2
-                  [0,rc],           # | 3
+    patchverts = [[r1,0],           # | 0  
+                  [(1+r1-r2)/2,0],  # | 1
+                  [1-r2,0],         # | 2
+                  [0,r1],           # | 3
                   [M0,M1-rm],       # | 4
-                  [1,rc],           # | 5
-                  [0,1/2],          # | 6
+                  [1,r2],           # | 5
+                  [0,(1+r1-r3)/2],  # | 6
                   [M0-rm,M1],       # | 7
                   [M0+rm,M1],       # | 8
-                  [1,1/2],          # | 9 
-                  [0,1-rc],         # | 10 
+                  [1,(1+r2-r4)/2],  # | 9 
+                  [0,1-r3],         # | 10 
                   [M0,M1+rm],       # | 11
-                  [1,1-rc],         # | 12
-                  [rc,1],           # | 13
-                  [1/2,1],          # | 14
-                  [1-rc,1]]         # | 15
+                  [1,1-r4],         # | 12
+                  [r3,1],           # | 13
+                  [(1+r3-r4)/2,1],  # | 14
+                  [1-r4,1]]         # | 15
                                     
     # make multipatch               
     domain, param = mesh.multipatch(patches=patches,patchverts=patchverts, nelems={None: 1})
@@ -130,13 +130,13 @@ def porous(*args, uref=0, rm=.2, rc=.2, M0=.5, M1=.5, **kwargs):
 
     # assign control point position
     paramcps[5]  = [M0-rm,M1-rm]
-    paramcps[11] = [rc,rc]
+    paramcps[11] = [r1,r1]
     paramcps[17] = [M0+rm,M1-rm]
-    paramcps[23] = [1-rc,rc]
+    paramcps[23] = [1-r2,r2]
     paramcps[29] = [M0+rm,M1+rm]
-    paramcps[35] = [1-rc,1-rc]
+    paramcps[35] = [1-r4,1-r4]
     paramcps[41] = [M0-rm,M1+rm]
-    paramcps[44] = [rc,1-rc]
+    paramcps[44] = [r3,1-r3]
 
     # assign control points weight
     cws = np.ones(len(funcsp))
