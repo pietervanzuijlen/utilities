@@ -1,24 +1,7 @@
 from nutils import *
 import numpy as np
 
-
-def lshape_trim(uref=0, width=1, height=1):
-
-    domain, geom = mesh.rectilinear([numpy.linspace(-width/2,width/2,3),numpy.linspace(-height/2,height/2,3)])
-    x, y = geom
-
-    domain = domain.withboundary(corner = domain.boundary['bottom'].boundary['right'])
-
-    domain = domain.trim(function.min(function.max(x,y),0), maxrefine=1)
-
-    domain = domain.withboundary(inner = 'trimmed')
-
-    # apply uniform refinement
-    domain = domain.refine(uref)
-
-    return domain, geom
-
-def lshape_mpatch(uref=0, width=1, height=1):
+def lshape(uref=0, width=1, height=1):
 
     # define patches by verts           # | patchnumber
     patches = [[0,1,3,4],               # | 0 
@@ -45,47 +28,6 @@ def lshape_mpatch(uref=0, width=1, height=1):
 
     # apply uniform refinement
     domain = domain.refine(uref)
-
-    return domain, geom
-
-def lshape(*args, uref=0, width=1, height=1, **kwargs):
-
-    domain, param = mesh.rectilinear([numpy.linspace(0,1,3),numpy.linspace(0,1,2)])
-
-    # function basis for NURBS
-    funcsp = domain.basis('th-spline', degree=1)
-    
-    # Get control points
-    paramcps = domain.project( param, onto=funcsp.vector(2), geometry=param, ischeme='gauss4' ).reshape(2,-1).T
-
-    # construct control points
-    paramcps[0] = [0,-height/2]
-    paramcps[1] = [width/2,-height/2]
-    paramcps[2] = [0,0]
-    paramcps[3] = [width/2,height/2]
-    paramcps[4] = [-width/2,0]
-    paramcps[5] = [-width/2,height/2]
-
-    # assign control points weight
-    cws = numpy.ones(len(funcsp))
-   
-    # make nurbes with new control points and weights
-    weightfunc = funcsp * cws.T 
-    nurbsfunc  = weightfunc / weightfunc.sum([0]) 
-
-    # assign boundaries
-    domain = domain.withboundary(
-        left    = domain.boundary['right'],
-        right   = domain.boundary['top'][:1],
-        top     = domain.boundary['top'][1:2],
-        bottom  = domain.boundary['left'],
-        inner   = domain.boundary['bottom'],)
- 
-    # apply uniform refinement
-    domain = domain.refine(uref)
-
-    # define new geometry
-    geom = nurbsfunc.vector(2).dot(paramcps.T.ravel())
 
     return domain, geom
 

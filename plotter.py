@@ -107,26 +107,29 @@ def plot_interfaces(name, domain, geom, interfaces, npoints=5, color=0.5, cmap='
 
     return 
 
-def plot_levels(name, domain, geom, minlvl=1, npoints=5, cmap='summer', title='', alpha=1):
+def plot_levels(name, domain, geom, uref=0, npoints=5, cmap='summer', title='', alpha=1):
 
     levels = numpy.array([len(trans) for trans in domain.transforms])
-    levels = tuple(levels-minlvl-1)
+    maxlevel = max(levels)-uref-1
+    levels = tuple(levels-uref-1)
     lvl = function.elemwise(domain.transforms, levels)
 
     bezier = domain.sample('bezier', npoints)
     x,fill = bezier.eval([geom,lvl])
 
+    colormap = plt.get_cmap(cmap, maxlevel)
+
     # background color is found as the color value between 0 and 1 projected on the colormap
     with export.mplfigure(name+'.png') as fig:
         ax = fig.add_axes([.1,.1,.8,.8], aspect='equal')
-        im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, fill, shading='gouraud', cmap=cmap, alpha=alpha)
+        im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, fill, shading='gouraud', cmap=colormap, alpha=alpha)
         ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.5))
         ax.set_title(title)
         ax.set_xmargin(0)
         ax.set_ymargin(0)
 
         cbar_ax = fig.add_axes([0.85, 0.1, 0.03, 0.8], title='Levels')
-        fig.colorbar(im, cax=cbar_ax)
+        fig.colorbar(im, cax=cbar_ax, ticks=numpy.arange(maxlevel)+1)
         cbar_ax.yaxis.set_ticks_position('right')
 
         ax.axis('off')
