@@ -244,8 +244,8 @@ def skelghost(grid, trim):
             backgroundrefs.append(ref.empty)
     
     # Define the background topoloty as a subset of the grid
-    background = topology.SubsetTopology(grid, backgroundrefs)
-
+#    background = topology.SubsetTopology(grid, backgroundrefs)
+    background = grid[numpy.sort(numpy.fromiter(map(grid.transforms.index, trim.transforms), dtype=int))]
     skeleton = background.interfaces
 
     # Get indices of elements on the trimmed boundary

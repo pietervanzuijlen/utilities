@@ -107,6 +107,22 @@ def plot_interfaces(name, domain, geom, interfaces, npoints=5, color=0.5, cmap='
 
     return 
 
+def plot_trim(name, domain, background, geom, npoints=5, color=0.5, bcolor=0.2, cmap='jet', title=''):
+    bezierdom = domain.sample('bezier', npoints)
+    bezierbg = background.sample('bezier', npoints)
+    xdom = bezierdom.eval(geom)
+    xbg = bezierbg.eval(geom)
+    with export.mplfigure(name+'.png', dpi=150) as fig:
+        fig.set_size_inches(6,6)
+        ax = fig.add_axes([0,0,1,1], aspect='equal')
+        ax.add_collection(collections.PolyCollection(xbg[bezierbg.tri], edgecolors='none', facecolors='#ccccccff', antialiaseds=False))
+        ax.add_collection(collections.LineCollection(xbg[bezierbg.hull], colors='w', linewidths=1, antialiaseds=True))
+        ax.add_collection(collections.PolyCollection(xdom[bezierdom.tri], edgecolors='none', facecolors='#3e7ca8ff', antialiaseds=False))
+        ax.add_collection(collections.LineCollection(xdom[bezierdom.hull], colors='w', linewidths=1, antialiaseds=True))
+        ax.autoscale_view()
+        ax.set_title(title)
+        ax.axis('off')
+
 def plot_levels(name, domain, geom, uref=0, npoints=5, cmap='summer', title='', alpha=1):
 
     levels = numpy.array([len(trans) for trans in domain.transforms])

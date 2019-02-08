@@ -69,9 +69,10 @@ def refine(domain, indicators, num, basis, maxlevel=10, grid=None, marker_type=N
 
     # Refinement with grid
     if grid:
-        gridrefindices = numpy.array([grid.transforms.index(trans) for trans in to_refine])
-        to_refine_grid = tuple(trans for trans in grid.transforms[gridrefindices])
-        grid = grid.refined_by(tuple(to_refine_grid))
+        grid = grid.refined_by(to_refine)
+        #gridrefindices = numpy.array([grid.transforms.index(trans) for trans in to_refine])
+        #to_refine_grid = tuple(trans for trans in grid.transforms[gridrefindices])
+        #grid = grid.refined_by(tuple(to_refine_grid))
 
         return domain, grid, something_refined
     else: 
