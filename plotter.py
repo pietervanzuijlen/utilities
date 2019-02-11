@@ -211,6 +211,26 @@ def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='jet', title='
   
     return
 
+def plot_contour(name, domain, geom, val, npoints=5, zorder=9, cmap='jet', title='', bartitle='', alpha=1, tol=1e-10, linewidths=.5, **arguments):
+
+    bezier = domain.sample('bezier', npoints)
+    x,val = bezier.eval([geom,val], arguments=arguments)
+
+    val[abs(val) < tol] = 0.0
+
+    with export.mplfigure(name+'.png') as fig:
+        ax = fig.add_axes([.1,.1,.8,.8], aspect='equal')
+        im = ax.tricontour(x[:,0], x[:,1], val, 10, linewidths=linewidths, zorder=zorder, cmap=cmap)
+        ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.5, alpha=alpha ))
+        ax.set_title(title)
+        ax.set_xmargin(0)
+        ax.set_ymargin(0)
+        
+        cbar_ax = fig.add_axes([0.85, 0.1, 0.03, 0.8], title=bartitle)
+        fig.colorbar(im, cax=cbar_ax)
+        cbar_ax.yaxis.set_ticks_position('right')
+
+    return
 
 def plot_convergence(name, xval, yval, labels=None, title='', levels={}, slopemarker=None):
     
