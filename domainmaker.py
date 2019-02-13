@@ -113,6 +113,70 @@ def porous(*args, uref=0, rm=.2, r1=.2, r2=.2, r3=.2, r4=.2, M0=.5, M1=.5, **kwa
 
     return domain, geom
 
+def cylinder(*args, uref=0, r=.2, M0=.5, M1=.5, H=1, W=1, **kwargs):
+
+    sr = np.sqrt(.5)*r
+    qr = np.sqrt(2)*r
+    
+    # define patches by verts       # | patchnumber
+    patches=[[ [0, 2], [1, 3]],     # | 0
+             [ [1, 3], [7, 5]],     # | 1
+             [ [7, 5], [6, 4]],     # | 2
+             [ [6, 4], [0, 2]]]     # | 3
+
+    # define vert positions         # | vertnumber
+    patchverts = [[0,0],            # | 0  
+                  [W,0],            # | 1
+                  [M0-sr,M1-sr],    # | 2
+                  [M0+sr,M1-sr],    # | 3
+                  [M0-sr,M1+sr],    # | 4
+                  [M0+sr,M1+sr],    # | 5
+                  [0,H],            # | 6
+                  [W,H]]            # | 7
+                                    
+    # make multipatch               
+    domain, param = mesh.multipatch(patches=patches,patchverts=patchverts, nelems={None: 1})
+
+    # define the function basis of degree 2 
+    funcsp = domain.basis('th-spline', degree=2 )
+
+    # get the initial control points 
+    paramcps = domain.project( param, onto=funcsp.vector(2), geometry=param, ischeme='gauss4' ).reshape(2,-1).T
+
+    # assign control point position
+    paramcps[5]  = [M0,M1-qr]
+    paramcps[11] = [M0+qr,M1]
+    paramcps[17] = [M0,M1+qr]
+    paramcps[23] = [M0-qr,M1]
+
+    # assign control points weight
+    cws = np.ones(len(funcsp))
+    cws[5]  = 1/2**.5
+    cws[11] = 1/2**.5
+    cws[17] = 1/2**.5 
+    cws[23] = 1/2**.5
+   
+    # make nurbes with new control points and weights
+    weightfunc = funcsp * cws.T 
+    nurbsfunc  = weightfunc / weightfunc.sum([0]) 
+ 
+    # apply uniform refinement
+    domain = domain.refine(uref)
+
+    # define new geometry
+    geom = nurbsfunc.vector(2).dot(paramcps.T.ravel()) 
+    
+    # assign boundaries
+    domain = domain.withboundary(
+          left    = 'patch3-bottom',
+          right   = 'patch1-bottom',
+          top     = 'patch2-bottom',
+          bottom  = 'patch0-bottom',
+          circle  = 'patch0-top,patch1-top,patch2-top,patch3-top',
+          )
+
+    return domain, geom
+
 def channels(uref=0, W=2, H=1, h1=0.2, h2=0.4, w1=0.2, w2=0.2, elemsize=0.1):
 
     assert h1/elemsize == round(h1/elemsize), 'mimimal step size for length is elemsize'
