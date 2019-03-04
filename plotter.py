@@ -1,5 +1,6 @@
 from   nutils import *
 import numpy 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from   matplotlib import collections
 import matplotlib.lines as mlines
@@ -71,7 +72,7 @@ def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle
 
     return 
 
-def plot_mesh(name, domain, geom, npoints=5, color=0.5, cmap='jet', title=''):
+def plot_mesh(name, domain, geom, npoints=5, color=0.5, cmap='jet', title='', axes=False):
 
     vmin = 0
     vmax = 1
@@ -86,11 +87,12 @@ def plot_mesh(name, domain, geom, npoints=5, color=0.5, cmap='jet', title=''):
         im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, fill, shading='gouraud', cmap=cmap, vmin=vmin, vmax=vmax)
         ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.5))
         ax.set_title(title)
-        ax.axis('off')
+        if axes == False:
+            ax.axis('off')
 
     return 
 
-def plot_interfaces(name, domain, geom, interfaces, npoints=5, color=0.5, cmap='summer', title='', alpha=1):
+def plot_edge(name, domain, geom, interfaces, npoints=5, color=0.5, cmap='summer', title='', alpha=1):
 
     vmin = 0
     vmax = 1
@@ -221,18 +223,19 @@ def plot_contour(name, domain, geom, val, npoints=5, zorder=9, cmap='jet', title
     with export.mplfigure(name+'.png') as fig:
         ax = fig.add_axes([.1,.1,.8,.8], aspect='equal')
         im = ax.tricontour(x[:,0], x[:,1], val, 10, linewidths=linewidths, zorder=zorder, cmap=cmap)
-        ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.5, alpha=alpha ))
+        ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=1, alpha=alpha ))
         ax.set_title(title)
         ax.set_xmargin(0)
         ax.set_ymargin(0)
+        ax.axis('off')
         
         cbar_ax = fig.add_axes([0.85, 0.1, 0.03, 0.8], title=bartitle)
-        fig.colorbar(im, cax=cbar_ax)
+        cbar = fig.colorbar(im, cax=cbar_ax)
         cbar_ax.yaxis.set_ticks_position('right')
 
     return
 
-def plot_convergence(name, xval, yval, labels=None, title='', levels={}, slopemarker=None):
+def plot_convergence(name, xval, yval, labels=None, marker='o', title='', levels={}, slopemarker=None):
     
     #from mpltools import annotation
 
@@ -257,7 +260,7 @@ def plot_convergence(name, xval, yval, labels=None, title='', levels={}, slopema
         for i, key in enumerate(yval.keys()):
     
             # make convergence plot
-            im = ax.loglog(xval[key], yval[key], color[i])
+            im = ax.loglog(xval[key], yval[key], color[i], marker=marker)
             handles += [mlines.Line2D([], [],color=color[i], label=key)]
             # Indicating hierarchical levels
             if key in levels:

@@ -1,6 +1,25 @@
 from nutils import *
 import numpy as np
 
+def rotategrid(grid, geom, angle):
+
+    # construct rotation matrix
+    RotMat = np.array([[np.cos(angle),-np.sin(angle)],[np.sin(angle),np.cos(angle)]])
+
+    # get function s[ace
+    funcsp = grid.basis('th-spline', degree=1 )
+
+    # get control points
+    paramcps = grid.project( geom, onto=funcsp.vector(2), geometry=geom, ischeme='gauss4' ).reshape(2,-1).T
+
+    # apply rotation to the control points
+    rotparamcps = RotMat.dot(paramcps.T) 
+
+    # construct the new geometery
+    geom = funcsp.vector(2).dot(rotparamcps.ravel()) 
+
+    return grid, geom
+
 def lshape(uref=0, width=1, height=1):
 
     # define patches by verts           # | patchnumber
@@ -63,6 +82,7 @@ def porous(*args, uref=0, rm=.2, r1=.2, r2=.2, r3=.2, r4=.2, M0=.5, M1=.5, **kwa
                                     
     # make multipatch               
     domain, param = mesh.multipatch(patches=patches,patchverts=patchverts, nelems={None: 1})
+    #domain, param = mesh.multipatch(patches=patches,patchverts=patchverts, nelems={None: 1, (3,0):2, (6,1):2, (7,4):2, (2,5):2, (1,9):2})
 
     # define the function basis of degree 2 
     funcsp = domain.basis('th-spline', degree=2 )
