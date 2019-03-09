@@ -42,6 +42,7 @@ def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle
 
     # Export the figure
     with export.mplfigure(name+'.png') as fig:
+        fig.patch.set_alpha(0)
 
         # Making the subplots
         i = 0 
@@ -82,6 +83,7 @@ def plot_mesh(name, domain, geom, npoints=5, color=0.5, cmap='jet', title='', ax
 
     # background color is found as the color value between 0 and 1 projected on the colormap
     with export.mplfigure(name+'.png') as fig:
+        fig.patch.set_alpha(0)
         fig.set_size_inches(6,6)
         ax = fig.add_axes([.1,.1,.8,.8], aspect='equal')
         im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, fill, shading='gouraud', cmap=cmap, vmin=vmin, vmax=vmax)
@@ -103,6 +105,7 @@ def plot_edge(name, domain, geom, interfaces, npoints=5, color=0.5, cmap='summer
     x_iface = ifacesample.eval(geom)
 
     with export.mplfigure(name+'.png') as fig:
+      fig.patch.set_alpha(0)
       ax = fig.add_subplot(111, aspect='equal')
       im = ax.tripcolor(x_domain[:,0], x_domain[:,1], domsample.tri, fill, shading='gouraud', cmap=cmap, alpha=alpha)
       ax.scatter(x_iface[:,0],x_iface[:,1],c='r',s=.8)
@@ -115,6 +118,7 @@ def plot_trim(name, domain, background, geom, npoints=5, color=0.5, bcolor=0.2, 
     xdom = bezierdom.eval(geom)
     xbg = bezierbg.eval(geom)
     with export.mplfigure(name+'.png', dpi=150) as fig:
+        fig.patch.set_alpha(0)
         fig.set_size_inches(6,6)
         ax = fig.add_axes([0,0,1,1], aspect='equal')
         ax.add_collection(collections.PolyCollection(xbg[bezierbg.tri], edgecolors='none', facecolors='#ccccccff', antialiaseds=False))
@@ -139,6 +143,7 @@ def plot_levels(name, domain, geom, uref=0, npoints=5, cmap='summer', title='', 
 
     # background color is found as the color value between 0 and 1 projected on the colormap
     with export.mplfigure(name+'.png') as fig:
+        fig.patch.set_alpha(0)
         ax = fig.add_axes([.1,.1,.8,.8], aspect='equal')
         im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, fill, shading='gouraud', cmap=colormap, alpha=alpha)
         ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.5))
@@ -154,13 +159,17 @@ def plot_levels(name, domain, geom, uref=0, npoints=5, cmap='summer', title='', 
 
     return 
 
-def plot_solution(name, domain, geom, val, npoints=5, cmap='jet', title='', bartitle='', alpha=0, grid=False, **arguments):
+def plot_solution(name, domain, geom, val, npoints=5, cmap='jet', title='', bartitle='', alpha=0, axisoff=False, grid=False, **arguments):
 
     bezier = domain.sample('bezier', npoints)
     x,val = bezier.eval([geom,val], arguments=arguments)
 
     with export.mplfigure(name+'.png') as fig:
-        ax = fig.add_axes([.1,.1,.8,.8], aspect='equal')
+        fig.patch.set_alpha(0)
+        fig.set_size_inches(5,4)
+        ax = fig.add_axes([0,0.1,.8,.8], aspect='equal')
+        ax.set_xmargin(0)
+        ax.set_ymargin(0)
         im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, val, shading='gouraud', cmap=cmap)
         # Add grid mesh instead of regular mesh
         if grid:
@@ -168,12 +177,13 @@ def plot_solution(name, domain, geom, val, npoints=5, cmap='jet', title='', bart
             x = bezier.eval(geom)
         ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.5, alpha=alpha))
         ax.set_title(title)
-        ax.set_xmargin(0)
-        ax.set_ymargin(0)
         
-        cbar_ax = fig.add_axes([0.85, 0.1, 0.03, 0.8], title=bartitle)
+        cbar_ax = fig.add_axes([0.8, 0.1, 0.03, 0.8], title=bartitle)
         fig.colorbar(im, cax=cbar_ax)
         cbar_ax.yaxis.set_ticks_position('right')
+
+        if axisoff: 
+            ax.axis('off')
 
     return
 
@@ -195,7 +205,10 @@ def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='jet', title='
 
     # plot vector as field and streamlines as dashed
     with export.mplfigure(name+'.png') as fig:
+        fig.patch.set_alpha(0)
         ax = fig.add_axes([.1,.1,.8,.8], aspect='equal')
+        ax.set_xmargin(0)
+        ax.set_ymargin(0)
         im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, vector, shading='gouraud', cmap=cmap)
         ax.tricontour(x[:,0], x[:,1], bezier.tri, stream, 16, colors='k', linestyles='dotted', linewidths=.5, zorder=9)
         # Add grid mesh instead of regular mesh
@@ -204,8 +217,6 @@ def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='jet', title='
             x = bezier.eval(geom)
         ax.add_collection(collections.LineCollection(x[bezier.hull], colors='w', linewidths=.5, alpha=alpha))
         ax.set_title(title)
-        ax.set_xmargin(0)
-        ax.set_ymargin(0)
 
         cbar_ax = fig.add_axes([0.85, 0.1, 0.03, 0.8], title=bartitle)
         fig.colorbar(im, cax=cbar_ax)
@@ -221,6 +232,7 @@ def plot_contour(name, domain, geom, val, npoints=5, zorder=9, cmap='jet', title
     val[abs(val) < tol] = 0.0
 
     with export.mplfigure(name+'.png') as fig:
+        fig.patch.set_alpha(0)
         ax = fig.add_axes([.1,.1,.8,.8], aspect='equal')
         im = ax.tricontour(x[:,0], x[:,1], val, 10, linewidths=linewidths, zorder=zorder, cmap=cmap)
         ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=1, alpha=alpha ))
@@ -248,6 +260,7 @@ def plot_convergence(name, xval, yval, labels=None, marker='o', title='', levels
     handles = []
 
     with export.mplfigure(name+'.png') as fig:
+        fig.patch.set_alpha(0)
         ax = fig.add_axes([.2,.1,.75,.8])
         #ax = fig.add_subplot(111)
         ax.autoscale(enable=True, axis='both', tight=True)

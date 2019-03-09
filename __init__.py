@@ -1,4 +1,4 @@
-from . import anouncer, domainmaker, indicater, plotter, refiner, writer
+from . import anouncer, domainmaker, indicater, plotter, refiner, writer, solutions
 
 # External modules:
 # nutils
