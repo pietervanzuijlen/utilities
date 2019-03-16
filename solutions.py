@@ -56,8 +56,8 @@ def stokes(domain, geom, ns):
     #ns.uexacty = '-radius^(856399 / 1572864) ((1 + alpha) sin(theta) psi + cos(theta) d1psi)'
     #ns.pexact  = '-radius^(-716465 / 1572864) ((1 + alpha)^2 d1psi + d3psi) / (1 - alpha)'
 
-    ns.uexactx = radius**(1-alpha)*(-(1+alpha)*function.Cos(theta)*psi+function.Sin(theta)*d1psi) 
-    ns.uexacty = -radius**(1-alpha)*((1+alpha)*function.Sin(theta)*psi+function.Cos(theta)*d1psi)
+    ns.uexactx = radius**alpha*(-(1+alpha)*function.Cos(theta)*psi+function.Sin(theta)*d1psi) 
+    ns.uexacty = -radius**alpha*((1+alpha)*function.Sin(theta)*psi+function.Cos(theta)*d1psi)
     ns.pexact  = -radius**(alpha-1)*((1+alpha)**2*d1psi+d3psi)/(1-alpha)
     
     ns.uexact_i = '<uexactx , uexacty>_i'

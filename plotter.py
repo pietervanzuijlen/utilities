@@ -73,7 +73,7 @@ def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle
 
     return 
 
-def plot_mesh(name, domain, geom, npoints=5, color=0.5, cmap='jet', title='', axes=False):
+def plot_mesh(name, domain, geom, npoints=5, color=0.5, cmap='viridis', title='', axes=False):
 
     vmin = 0
     vmax = 1
@@ -112,7 +112,7 @@ def plot_edge(name, domain, geom, interfaces, npoints=5, color=0.5, cmap='summer
 
     return 
 
-def plot_trim(name, domain, background, geom, npoints=5, color=0.5, bcolor=0.2, cmap='jet', title=''):
+def plot_trim(name, domain, background, geom, npoints=5, color=0.5, bcolor=0.2, cmap='viridis', title=''):
     bezierdom = domain.sample('bezier', npoints)
     bezierbg = background.sample('bezier', npoints)
     xdom = bezierdom.eval(geom)
@@ -159,7 +159,7 @@ def plot_levels(name, domain, geom, uref=0, npoints=5, cmap='summer', title='', 
 
     return 
 
-def plot_solution(name, domain, geom, val, npoints=5, cmap='jet', title='', bartitle='', alpha=0, axisoff=False, grid=False, **arguments):
+def plot_solution(name, domain, geom, val, npoints=5, cmap='viridis', title='', bartitle='', alpha=0, axisoff=False, grid=False, vmax=None, vmin=None, **arguments):
 
     bezier = domain.sample('bezier', npoints)
     x,val = bezier.eval([geom,val], arguments=arguments)
@@ -170,7 +170,7 @@ def plot_solution(name, domain, geom, val, npoints=5, cmap='jet', title='', bart
         ax = fig.add_axes([0,0.1,.8,.8], aspect='equal')
         ax.set_xmargin(0)
         ax.set_ymargin(0)
-        im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, val, shading='gouraud', cmap=cmap)
+        im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, val, shading='gouraud', cmap=cmap, vmin=vmin, vmax=vmax)
         # Add grid mesh instead of regular mesh
         if grid:
             bezier = grid.sample('bezier', npoints)
@@ -188,7 +188,7 @@ def plot_solution(name, domain, geom, val, npoints=5, cmap='jet', title='', bart
     return
 
 
-def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='jet', title='', bartitle='', every=.05, alpha=0, grid=False, **arguments):
+def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='viridis', title='', bartitle='', every=.05, alpha=0, axisoff=False, grid=False, vmax=None, vmin=None, **arguments):
 
     ns.vector = val
 
@@ -206,10 +206,11 @@ def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='jet', title='
     # plot vector as field and streamlines as dashed
     with export.mplfigure(name+'.png') as fig:
         fig.patch.set_alpha(0)
-        ax = fig.add_axes([.1,.1,.8,.8], aspect='equal')
+        fig.set_size_inches(5,4)
+        ax = fig.add_axes([0,0.1,.8,.8], aspect='equal')
         ax.set_xmargin(0)
         ax.set_ymargin(0)
-        im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, vector, shading='gouraud', cmap=cmap)
+        im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, vector, shading='gouraud', cmap=cmap, vmin=vmin, vmax=vmax)
         ax.tricontour(x[:,0], x[:,1], bezier.tri, stream, 16, colors='k', linestyles='dotted', linewidths=.5, zorder=9)
         # Add grid mesh instead of regular mesh
         if grid:
@@ -221,10 +222,13 @@ def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='jet', title='
         cbar_ax = fig.add_axes([0.85, 0.1, 0.03, 0.8], title=bartitle)
         fig.colorbar(im, cax=cbar_ax)
         cbar_ax.yaxis.set_ticks_position('right')
+
+        if axisoff: 
+            ax.axis('off')
   
     return
 
-def plot_contour(name, domain, geom, val, npoints=5, zorder=9, cmap='jet', title='', bartitle='', alpha=1, tol=1e-10, linewidths=.5, **arguments):
+def plot_contour(name, domain, geom, val, npoints=5, zorder=9, cmap='viridis', title='', bartitle='', alpha=1, tol=1e-10, linewidths=.5, **arguments):
 
     bezier = domain.sample('bezier', npoints)
     x,val = bezier.eval([geom,val], arguments=arguments)
