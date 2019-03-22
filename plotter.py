@@ -73,7 +73,7 @@ def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle
 
     return 
 
-def plot_mesh(name, domain, geom, npoints=5, color=0.5, cmap='viridis', title='', axes=False):
+def plot_mesh(name, domain, geom, npoints=5, color=0, cmap='Greys', title='', axes=False):
 
     vmin = 0
     vmax = 1

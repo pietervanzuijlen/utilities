@@ -272,6 +272,8 @@ def channels(uref=0, W=2, H=1, h1=0.2, h2=0.4, w1=0.2, w2=0.2, elemsize=0.1):
           center  = 'patch1-top,patch3-right,patch4-left,patch6-bottom',
           )
 
+    return domain, geom
+
 def annulus(*args, uref=0, Rin=1, Rout=4, **kwargs):
 
     Rmid = (Rin + Rout)/2
@@ -313,45 +315,92 @@ def annulus(*args, uref=0, Rin=1, Rout=4, **kwargs):
 
     return domain, geom
 
-def skelghost(grid, trim):
 
-    # Get indices of elements of the grid which are inside the trimmed domain
-    indices = np.array([i for i, trans in enumerate(grid.transforms) if trim.transforms.contains(trans)])
+class immersed:
 
-    # Construct the list of references for the background topology
-    gridrefs = grid.references
-    backgroundrefs = []
-    for i, ref in enumerate(gridrefs):
-        if i in indices:
-            backgroundrefs.append(ref)
-        else:
-            backgroundrefs.append(ref.empty)
-    
-    # Define the background topoloty as a subset of the grid
-#    background = topology.SubsetTopology(grid, backgroundrefs)
-    background = grid[numpy.sort(numpy.fromiter(map(grid.transforms.index, trim.transforms), dtype=int))]
-    skeleton = background.interfaces
+    def __init__(self, domain, grid):
+        
+        # Get indices of elements of the grid which are inside the trimmed domain
+        indices = np.array([i for i, trans in enumerate(grid.transforms) if domain.transforms.contains(trans)])
 
-    # Get indices of elements on the trimmed boundary
-    trimindices = [trim.transforms.index_with_tail(trans)[0] for trans in trim.boundary['trimmed'].transforms]
-    # Filter duplications
-    trimindices = sorted(set(trimindices))
-    # Translate indices to indices in the background
-    backgroundindi = [background.transforms.index(trans) for trans in trim.transforms[numpy.array(trimindices)]]
+        # Construct the list of references for the background topology
+        gridrefs = grid.references
+        backgroundrefs = []
+        for i, ref in enumerate(gridrefs):
+            if i in indices:
+                backgroundrefs.append(ref)
+            else:
+                backgroundrefs.append(ref.empty)
+        
+        # Define the background topoloty as a subset of the grid
+        background = grid[numpy.sort(numpy.fromiter(map(grid.transforms.index, domain.transforms), dtype=int))]
+        skeleton = background.interfaces
 
-    grefs = []
-    # Find references of the interfaces in the cutelements
-    for iface, oppo, ref in zip(skeleton.transforms, skeleton.opposites, skeleton.references):
-        ifacehead = background.transforms.index_with_tail(iface)[0]
-        oppohead = background.opposites.index_with_tail(oppo)[0]
-        if ifacehead in backgroundindi or oppohead in backgroundindi:
-            grefs.append(ref)
-        else:
-            grefs.append(ref.empty)
+        # Get indices of elements on the trimmed boundary
+        trimindices = [domain.transforms.index_with_tail(trans)[0] for trans in domain.boundary['trimmed'].transforms]
+        # Filter duplications
+        trimindices = sorted(set(trimindices))
+        # Translate indices to indices in the background
+        backgroundindi = [background.transforms.index(trans) for trans in domain.transforms[numpy.array(trimindices)]]
 
-    assert len(skeleton) == len(grefs), 'Lengths don`t comply'
+        grefs = []
+        # Find references of the interfaces in the cutelements
+        for iface, oppo, ref in zip(skeleton.transforms, skeleton.opposites, skeleton.references):
+            ifacehead = background.transforms.index_with_tail(iface)[0]
+            oppohead = background.opposites.index_with_tail(oppo)[0]
+            if ifacehead in backgroundindi or oppohead in backgroundindi:
+                grefs.append(ref)
+            else:
+                grefs.append(ref.empty)
 
-    # Define the ghost topoloty as a subset of the skeleton
-    ghost = topology.SubsetTopology(background.interfaces, grefs)
+        assert len(skeleton) == len(grefs), 'Lengths don`t comply'
 
-    return background.interfaces, ghost
+        # Define the ghost topoloty as a subset of the skeleton
+        ghost = topology.SubsetTopology(background.interfaces, grefs)
+
+        self.background = background
+        self.skeleton = skeleton
+        self.ghost = ghost
+
+#def skelghost(grid, trim):
+#
+#    # Get indices of elements of the grid which are inside the trimmed domain
+#    indices = np.array([i for i, trans in enumerate(grid.transforms) if trim.transforms.contains(trans)])
+#
+#    # Construct the list of references for the background topology
+#    gridrefs = grid.references
+#    backgroundrefs = []
+#    for i, ref in enumerate(gridrefs):
+#        if i in indices:
+#            backgroundrefs.append(ref)
+#        else:
+#            backgroundrefs.append(ref.empty)
+#    
+#    # Define the background topoloty as a subset of the grid
+##    background = topology.SubsetTopology(grid, backgroundrefs)
+#    background = grid[numpy.sort(numpy.fromiter(map(grid.transforms.index, trim.transforms), dtype=int))]
+#    skeleton = background.interfaces
+#
+#    # Get indices of elements on the trimmed boundary
+#    trimindices = [trim.transforms.index_with_tail(trans)[0] for trans in trim.boundary['trimmed'].transforms]
+#    # Filter duplications
+#    trimindices = sorted(set(trimindices))
+#    # Translate indices to indices in the background
+#    backgroundindi = [background.transforms.index(trans) for trans in trim.transforms[numpy.array(trimindices)]]
+#
+#    grefs = []
+#    # Find references of the interfaces in the cutelements
+#    for iface, oppo, ref in zip(skeleton.transforms, skeleton.opposites, skeleton.references):
+#        ifacehead = background.transforms.index_with_tail(iface)[0]
+#        oppohead = background.opposites.index_with_tail(oppo)[0]
+#        if ifacehead in backgroundindi or oppohead in backgroundindi:
+#            grefs.append(ref)
+#        else:
+#            grefs.append(ref.empty)
+#
+#    assert len(skeleton) == len(grefs), 'Lengths don`t comply'
+#
+#    # Define the ghost topoloty as a subset of the skeleton
+#    ghost = topology.SubsetTopology(background.interfaces, grefs)
+#
+#    return background.interfaces, ghost
