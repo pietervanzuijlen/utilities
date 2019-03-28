@@ -251,13 +251,16 @@ def plot_contour(name, domain, geom, val, npoints=5, zorder=9, cmap='viridis', t
 
     return
 
-def plot_convergence(name, xval, yval, labels=None, marker='o', title='', levels={}, slopemarker=None):
+def plot_convergence(name, xval, yval, labels=None, marker='o', title='', levels={}, slopemarker=None, fontsize='large'):
+
+    # fontsize 'xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'
     
     #from mpltools import annotation
 
     assert yval.keys() == xval.keys(), 'the axes keys should have the same names'
    
-    color = ['c','b','y','g','y']
+    #color = ['c','b','y','g','y']
+    color = ['orange','crimson','indigo','orchid','tomato']
 
     levelxpts = {}
     levelypts = {}
@@ -271,8 +274,8 @@ def plot_convergence(name, xval, yval, labels=None, marker='o', title='', levels
 
         # Add labels if given
         if labels:
-            ax.set_xlabel(labels[0])
-            ax.set_ylabel(labels[1])
+            ax.set_xlabel(labels[0], fontsize=fontsize)
+            ax.set_ylabel(labels[1], fontsize=fontsize)
 
         for i, key in enumerate(yval.keys()):
     
@@ -346,7 +349,7 @@ def plot_convergence(name, xval, yval, labels=None, marker='o', title='', levels
                 im = ax.text(xtxt,ytxt,str(slope))
 
         # Add legend and title
-        ax.legend(handles=handles)
+        ax.legend(handles=handles, fontsize=fontsize)
         ax.set_title(title)
 
    
