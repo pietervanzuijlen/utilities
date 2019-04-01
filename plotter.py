@@ -159,7 +159,7 @@ def plot_levels(name, domain, geom, uref=0, npoints=5, cmap='summer', title='', 
 
     return 
 
-def plot_solution(name, domain, geom, val, npoints=5, cmap='viridis', title='', bartitle='', alpha=0, axisoff=False, grid=False, vmax=None, vmin=None, figsize=[5,4], cbarsize=[0.85, 0.1, 0.03, 0.8], axsize=[0.1,0.1,.8,.8], **arguments):
+def plot_solution(name, domain, geom, val, npoints=5, cmap='viridis', title='', bartitle='', alpha=0, axisoff=False, grid=False, vmax=None, vmin=None, figsize=[5,4], cbarsize=[0.85, 0.1, 0.03, 0.8], axsize=[0.08,0.1,.8,.8], **arguments):
 
     bezier = domain.sample('bezier', npoints)
     x,val = bezier.eval([geom,val], arguments=arguments)
@@ -190,7 +190,7 @@ def plot_solution(name, domain, geom, val, npoints=5, cmap='viridis', title='', 
     return
 
 
-def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='viridis', title='', bartitle='', every=.05, alpha=0, axisoff=False, grid=False, vmax=None, vmin=None, figsize=[5,4], cbarsize=[0.85, 0.1, 0.03, 0.8], axsize=[0.1,0.1,.8,.8], **arguments):
+def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='viridis', title='', bartitle='', every=.05, alpha=0, axisoff=False, grid=False, vmax=None, vmin=None, figsize=[5,4], cbarsize=[0.85, 0.1, 0.03, 0.8], axsize=[0.08,0.1,.8,.8], **arguments):
 
     ns.vector = val
 
