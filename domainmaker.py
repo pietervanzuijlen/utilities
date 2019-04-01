@@ -197,6 +197,23 @@ def cylinder(*args, uref=0, r=.2, M0=.5, M1=.5, H=1, W=1, **kwargs):
 
     return domain, geom
 
+def complexchannel(maxrefine, nelem=21, cutval=0.7):
+    
+    grid, geom = mesh.rectilinear([np.linspace(0,2,nelem*2+1), np.linspace(0,1,nelem+1)])
+    x, y = geom
+
+    level1 = function.Sin(y*0.83*np.pi + 0.1*x + 0.21*function.Sin(x*1.11*np.pi))
+    level2 = 3*function.Sin(y*0.97*np.pi + 1.1*x + 0.4*x**2)-2
+    level3 = 0.5*(2*function.Sin(y*np.pi-0.6) + 0.8*function.sqrt(x) - 2.6)
+    level4 = 0.5*(function.Sin(x*np.pi*0.6-0.8) * function.Sin(y*0.83*np.pi  + 0.13*x + 0.26*function.Sin(x*1.11*np.pi)))**8
+
+    levelset = function.max(level1,level2)+ function.max(0,level3) - level4
+
+    domain = grid.trim(levelset - 0.7 , maxrefine=maxrefine)
+
+    return grid, geom, domain
+
+
 def channels(uref=0, W=2, H=1, h1=0.2, h2=0.4, w1=0.2, w2=0.2, elemsize=0.1):
 
     assert h1/elemsize == round(h1/elemsize), 'mimimal step size for length is elemsize'

@@ -73,7 +73,7 @@ def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle
 
     return 
 
-def plot_mesh(name, domain, geom, npoints=5, color=0, cmap='Greys', title='', axes=False):
+def plot_mesh(name, domain, geom, npoints=5, color=0, cmap='Greys', title='', axes=False, figsize=[6,6]):
 
     vmin = 0
     vmax = 1
@@ -84,7 +84,7 @@ def plot_mesh(name, domain, geom, npoints=5, color=0, cmap='Greys', title='', ax
     # background color is found as the color value between 0 and 1 projected on the colormap
     with export.mplfigure(name+'.png') as fig:
         fig.patch.set_alpha(0)
-        fig.set_size_inches(6,6)
+        fig.set_size_inches(figsize[0],figsize[1])
         ax = fig.add_axes([.1,.1,.8,.8], aspect='equal')
         im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, fill, shading='gouraud', cmap=cmap, vmin=vmin, vmax=vmax)
         ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.5))
@@ -159,15 +159,16 @@ def plot_levels(name, domain, geom, uref=0, npoints=5, cmap='summer', title='', 
 
     return 
 
-def plot_solution(name, domain, geom, val, npoints=5, cmap='viridis', title='', bartitle='', alpha=0, axisoff=False, grid=False, vmax=None, vmin=None, **arguments):
+def plot_solution(name, domain, geom, val, npoints=5, cmap='viridis', title='', bartitle='', alpha=0, axisoff=False, grid=False, vmax=None, vmin=None, figsize=[5,4], cbarsize=[0.85, 0.1, 0.03, 0.8], axsize=[0.1,0.1,.8,.8], **arguments):
 
     bezier = domain.sample('bezier', npoints)
     x,val = bezier.eval([geom,val], arguments=arguments)
 
     with export.mplfigure(name+'.png') as fig:
         fig.patch.set_alpha(0)
-        fig.set_size_inches(5,4)
-        ax = fig.add_axes([0,0.1,.8,.8], aspect='equal')
+        fig.set_size_inches(figsize[0],figsize[1])
+        #ax = fig.add_axes([0,0.1,.8,.8], aspect='equal')
+        ax = fig.add_axes(axsize, aspect='equal')
         ax.set_xmargin(0)
         ax.set_ymargin(0)
         im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, val, shading='gouraud', cmap=cmap, vmin=vmin, vmax=vmax)
@@ -178,7 +179,8 @@ def plot_solution(name, domain, geom, val, npoints=5, cmap='viridis', title='', 
         ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.5, alpha=alpha))
         ax.set_title(title)
         
-        cbar_ax = fig.add_axes([0.8, 0.1, 0.03, 0.8], title=bartitle)
+        #cbar_ax = fig.add_axes([0.8, 0.1, 0.03, 0.8], title=bartitle)
+        cbar_ax = fig.add_axes(cbarsize, title=bartitle)
         fig.colorbar(im, cax=cbar_ax)
         cbar_ax.yaxis.set_ticks_position('right')
 
@@ -188,7 +190,7 @@ def plot_solution(name, domain, geom, val, npoints=5, cmap='viridis', title='', 
     return
 
 
-def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='viridis', title='', bartitle='', every=.05, alpha=0, axisoff=False, grid=False, vmax=None, vmin=None, **arguments):
+def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='viridis', title='', bartitle='', every=.05, alpha=0, axisoff=False, grid=False, vmax=None, vmin=None, figsize=[5,4], cbarsize=[0.85, 0.1, 0.03, 0.8], axsize=[0.1,0.1,.8,.8], **arguments):
 
     ns.vector = val
 
@@ -206,8 +208,9 @@ def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='viridis', tit
     # plot vector as field and streamlines as dashed
     with export.mplfigure(name+'.png') as fig:
         fig.patch.set_alpha(0)
-        fig.set_size_inches(5,4)
-        ax = fig.add_axes([0,0.1,.8,.8], aspect='equal')
+        fig.set_size_inches(figsize[0],figsize[1])
+        ax = fig.add_axes(axsize, aspect='equal')
+        #ax = fig.add_axes([0,0.1,.8,.8], aspect='equal')
         ax.set_xmargin(0)
         ax.set_ymargin(0)
         im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, vector, shading='gouraud', cmap=cmap, vmin=vmin, vmax=vmax)
@@ -219,7 +222,8 @@ def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='viridis', tit
         ax.add_collection(collections.LineCollection(x[bezier.hull], colors='w', linewidths=.5, alpha=alpha))
         ax.set_title(title)
 
-        cbar_ax = fig.add_axes([0.85, 0.1, 0.03, 0.8], title=bartitle)
+        #cbar_ax = fig.add_axes([0.85, 0.1, 0.03, 0.8], title=bartitle)
+        cbar_ax = fig.add_axes(cbarsize, title=bartitle)
         fig.colorbar(im, cax=cbar_ax)
         cbar_ax.yaxis.set_ticks_position('right')
 
