@@ -2,10 +2,8 @@ from   nutils import *
 import numpy 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from   matplotlib import collections
-import matplotlib.lines as mlines
 
-def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle='', alpha=0, normalize=False):
+def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle='', alpha=0, normalize=False, labelsize=10):
 
     # Amount of subplots
     n = len(indicators)
@@ -59,8 +57,10 @@ def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle
                 im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, elemvalue, shading='gouraud', cmap='summer', vmin=vmin, vmax=vmax)
             else:
                 im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, elemvalue, shading='gouraud', cmap='summer')
-                fig.colorbar(im)
-            ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.3, alpha=alpha))
+                cbar_ax = fig.add_axes([0.85, 0.11, 0.03, 0.77], title=bartitle)
+                fig.colorbar(im, cax=cbar_ax)
+                cbar_ax.tick_params(labelsize=labelsize)
+            ax.add_collection(mpl.collections.LineCollection(x[bezier.hull], colors='k', linewidths=.3, alpha=alpha))
             ax.autoscale(enable=True, axis='both', tight=True)
             ax.set_title(str(key))
             ax.axis('off')
@@ -70,10 +70,11 @@ def plot_indicators(name, domain, geom, indicators, npoints=5, shape=0, bartitle
             fig.subplots_adjust(left=0.05, right=0.75)
             cbar_ax = fig.add_axes([0.85, 0.11, 0.03, 0.77], title=bartitle)
             fig.colorbar(im, cax=cbar_ax)
+            cbar_ax.tick_params(labelsize=labelsize)
 
     return 
 
-def plot_mesh(name, domain, geom, npoints=5, color=0, cmap='Greys', title='', axes=False, figsize=[6,6]):
+def plot_mesh(name, domain, geom, npoints=5, color=0, cmap='Greys', title='', axes=False, figsize=[6,6], linewidths=.5):
 
     vmin = 0
     vmax = 1
@@ -87,7 +88,7 @@ def plot_mesh(name, domain, geom, npoints=5, color=0, cmap='Greys', title='', ax
         fig.set_size_inches(figsize[0],figsize[1])
         ax = fig.add_axes([.1,.1,.8,.8], aspect='equal')
         im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, fill, shading='gouraud', cmap=cmap, vmin=vmin, vmax=vmax)
-        ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.5))
+        ax.add_collection(mpl.collections.LineCollection(x[bezier.hull], colors='k', linewidths=linewidths))
         ax.set_title(title)
         if axes == False:
             ax.axis('off')
@@ -121,10 +122,10 @@ def plot_trim(name, domain, background, geom, npoints=5, color=0.5, bcolor=0.2, 
         fig.patch.set_alpha(0)
         fig.set_size_inches(6,6)
         ax = fig.add_axes([0,0,1,1], aspect='equal')
-        ax.add_collection(collections.PolyCollection(xbg[bezierbg.tri], edgecolors='none', facecolors='#ccccccff', antialiaseds=False))
-        ax.add_collection(collections.LineCollection(xbg[bezierbg.hull], colors='w', linewidths=1, antialiaseds=True))
-        ax.add_collection(collections.PolyCollection(xdom[bezierdom.tri], edgecolors='none', facecolors='#3e7ca8ff', antialiaseds=False))
-        ax.add_collection(collections.LineCollection(xdom[bezierdom.hull], colors='w', linewidths=1, antialiaseds=True))
+        ax.add_collection(mpl.collections.PolyCollection(xbg[bezierbg.tri], edgecolors='none', facecolors='#ccccccff', antialiaseds=False))
+        ax.add_collection(mpl.collections.LineCollection(xbg[bezierbg.hull], colors='w', linewidths=1, antialiaseds=True))
+        ax.add_collection(mpl.collections.PolyCollection(xdom[bezierdom.tri], edgecolors='none', facecolors='#3e7ca8ff', antialiaseds=False))
+        ax.add_collection(mpl.collections.LineCollection(xdom[bezierdom.hull], colors='w', linewidths=1, antialiaseds=True))
         ax.autoscale_view()
         ax.set_title(title)
         ax.axis('off')
@@ -146,7 +147,7 @@ def plot_levels(name, domain, geom, uref=0, npoints=5, cmap='summer', title='', 
         fig.patch.set_alpha(0)
         ax = fig.add_axes([.1,.1,.8,.8], aspect='equal')
         im = ax.tripcolor(x[:,0], x[:,1], bezier.tri, fill, shading='gouraud', cmap=colormap, alpha=alpha)
-        ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.5))
+        ax.add_collection(mpl.collections.LineCollection(x[bezier.hull], colors='k', linewidths=.5))
         ax.set_title(title)
         ax.set_xmargin(0)
         ax.set_ymargin(0)
@@ -159,7 +160,7 @@ def plot_levels(name, domain, geom, uref=0, npoints=5, cmap='summer', title='', 
 
     return 
 
-def plot_solution(name, domain, geom, val, npoints=5, cmap='viridis', title='', bartitle='', alpha=0, axisoff=False, grid=False, vmax=None, vmin=None, figsize=[5,4], cbarsize=[0.85, 0.1, 0.03, 0.8], axsize=[0.08,0.1,.8,.8], **arguments):
+def plot_solution(name, domain, geom, val, npoints=5, cmap='viridis', title='', bartitle='', alpha=0, axisoff=False, grid=False, vmax=None, vmin=None, figsize=[5,4], cbarsize=[0.8, 0.1, 0.03, 0.8], axsize=[0.01,0.1,.8,.8], labelsize=10, **arguments):
 
     bezier = domain.sample('bezier', npoints)
     x,val = bezier.eval([geom,val], arguments=arguments)
@@ -176,13 +177,14 @@ def plot_solution(name, domain, geom, val, npoints=5, cmap='viridis', title='', 
         if grid:
             bezier = grid.sample('bezier', npoints)
             x = bezier.eval(geom)
-        ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=.5, alpha=alpha))
+        ax.add_collection(mpl.collections.LineCollection(x[bezier.hull], colors='k', linewidths=.5, alpha=alpha))
         ax.set_title(title)
         
         #cbar_ax = fig.add_axes([0.8, 0.1, 0.03, 0.8], title=bartitle)
         cbar_ax = fig.add_axes(cbarsize, title=bartitle)
         fig.colorbar(im, cax=cbar_ax)
         cbar_ax.yaxis.set_ticks_position('right')
+        cbar_ax.tick_params(labelsize=labelsize)
 
         if axisoff: 
             ax.axis('off')
@@ -190,7 +192,7 @@ def plot_solution(name, domain, geom, val, npoints=5, cmap='viridis', title='', 
     return
 
 
-def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='viridis', title='', bartitle='', every=.05, alpha=0, axisoff=False, grid=False, vmax=None, vmin=None, figsize=[5,4], cbarsize=[0.85, 0.1, 0.03, 0.8], axsize=[0.08,0.1,.8,.8], **arguments):
+def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='viridis', title='', bartitle='', every=.05, alpha=0, axisoff=False, grid=False, vmax=None, vmin=None, figsize=[5,4], cbarsize=[0.85, 0.1, 0.03, 0.8], axsize=[0.08,0.1,.8,.8], labelsize=10, **arguments):
 
     ns.vector = val
 
@@ -219,13 +221,14 @@ def plot_streamlines(name, domain, geom, ns, val, npoints=5, cmap='viridis', tit
         if grid:
             bezier = grid.sample('bezier', npoints)
             x = bezier.eval(geom)
-        ax.add_collection(collections.LineCollection(x[bezier.hull], colors='w', linewidths=.5, alpha=alpha))
+        ax.add_collection(mpl.collections.LineCollection(x[bezier.hull], colors='w', linewidths=.5, alpha=alpha))
         ax.set_title(title)
 
         #cbar_ax = fig.add_axes([0.85, 0.1, 0.03, 0.8], title=bartitle)
         cbar_ax = fig.add_axes(cbarsize, title=bartitle)
         fig.colorbar(im, cax=cbar_ax)
         cbar_ax.yaxis.set_ticks_position('right')
+        cbar_ax.tick_params(labelsize=labelsize)
 
         if axisoff: 
             ax.axis('off')
@@ -243,7 +246,7 @@ def plot_contour(name, domain, geom, val, npoints=5, zorder=9, cmap='viridis', t
         fig.patch.set_alpha(0)
         ax = fig.add_axes([.1,.1,.8,.8], aspect='equal')
         im = ax.tricontour(x[:,0], x[:,1], val, 10, linewidths=linewidths, zorder=zorder, cmap=cmap)
-        ax.add_collection(collections.LineCollection(x[bezier.hull], colors='k', linewidths=1, alpha=alpha ))
+        ax.add_collection(mpl.collections.LineCollection(x[bezier.hull], colors='k', linewidths=1, alpha=alpha ))
         ax.set_title(title)
         ax.set_xmargin(0)
         ax.set_ymargin(0)
@@ -285,7 +288,7 @@ def plot_convergence(name, xval, yval, labels=None, marker='o', title='', levels
     
             # make convergence plot
             im = ax.loglog(xval[key], yval[key], color[i], marker=marker)
-            handles += [mlines.Line2D([], [],color=color[i], label=key)]
+            handles += [mpl.lines.Line2D([], [],color=color[i], label=key)]
             # Indicating hierarchical levels
             if key in levels:
                 vals = levels[key]

@@ -1,4 +1,5 @@
 import datetime
+import csv
 
 def write(filename,settings,*args,**kwargs):
 
@@ -57,3 +58,17 @@ def read(filename):
             break
 
     return var
+
+def appendcsv(filename,data,*args,**kwargs):
+
+    assert(type(filename) == str)
+
+    with open(filename, 'a') as csvFile:
+        writer = csv.writer(csvFile)
+        writer.writerow(data)
+
+    csvFile.close()
+
+    print('CSV file ',filename+'.txt is edited')
+
+    return      
